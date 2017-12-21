@@ -121,7 +121,7 @@ boot/setup: boot/setup.s											# 这里开始的三行是使用 8086 汇编�
 boot/bootsect: boot/bootsect.s	# 同上，生成 bootsect.o 磁盘引导模块
 				$(AS86) -o boot/bootsect.o boot/bootsect.s
 				$(LD86) -s -o boot/bootsect boot/bootsect.o
-# 22222 这四行的作用是在 bootsect.s 程序开头添加一行有关 system 文件长度的信息。方法是首先
+# 129-132 这四行的作用是在 bootsect.s 程序开头添加一行有关 system 文件长度的信息。方法是首先
 # 生成含有 "SYSSIZE=system 文件实际长度" 一行信息的 tmp.s 文件，然后将 bootsect.s 文件添加在
 # 其后。取得 system 长度的方法是：首先利用命令 ls 对 system 文件进行长列表显示，用 grep 命令
 # 取得列表行上文件字节数字段信息，并定向保存在 tmp.s 临时文件中。cut 命令用于剪切字符串，tr 用
