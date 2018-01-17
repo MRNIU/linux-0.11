@@ -21,7 +21,7 @@ startup_32:   # 14-28 行设置各个数据段寄存器
   # 置 ds,es,fs,gs 中的选择符为 setup.s 中构造的数据段(全局描述符表的第 2 项)=0x10，
   # 并将堆栈放置在 _stack_start 所指向的 user_stack 数组内，然后使用新的中断描述符表和
   # 全局段描述符表。新的全局段描述符表中初始内容与 setup.s 中的基本一样。变量 _stack_start
-  # 定义在 kernel/sched.c 22222 行
+  # 定义在 kernel/sched.c 65 行
     mov %ax,%ds
     mov %ax,%es
     mov %ax,%fs
