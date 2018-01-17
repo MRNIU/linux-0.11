@@ -75,8 +75,8 @@ bad_sys_call: # 错误的系统调号从这里返回
   iret
 
 .align 2
-reschedule: # 重新执行调度程序入口。电镀程序 schedule 在(kernel/sched.c 2222)
-  pushl $ret_from_sys_call  # 将 ret_from_sys_call 的地址入栈
+reschedule: # 重新执行调度程序入口。调度程序 schedule 在(kernel/sched.c 108)
+  pushl $ret_from_sys_call  # 将 ret_from_sys_call 的地址入栈(107 行)
   jmp _schedule
 .align 2
 _system_call: # int 80--Linux 系统调用入口点(调用中断 int 0x80,eax 中是调用号)
@@ -98,7 +98,7 @@ _system_call: # int 80--Linux 系统调用入口点(调用中断 int 0x80,eax �
 # 函数的地址数组表。
   call _sys_call_table(,%eax,4) # 把系统调用返回值入栈
   pushl %EAX,ovl _current],%eax # 取当前任务(进程)数据结构地址 -> eax.
-# 下面 222～222 行查看当前任务的运行状态。如果不在就绪状态(state 不等于 0)就去执行调度程序。
+# 下面 103～106 行查看当前任务的运行状态。如果不在就绪状态(state 不等于 0)就去执行调度程序。
 # 如果该任务在就需状态但时间片已经用完(counter 值等于 0)，则也去执行调度程序。
   cmpl $0,state(%eax)  # state
   jne reschedule
@@ -120,7 +120,7 @@ ret_from_sys_call:  # 以下这段代码执行从系统调用 C 函数返回后�
 # 如果原堆栈段选择符不为 0x17(即原堆栈不在用户数据段中)，则也退出。
   cmpw $0x17,OLDSS(%esp)  # was stack segment=0x17?
   jne 3f
-# 下面这段代码(222~2222)的用途是首先取当前任务结构中的信号位图(32 位，每位代表 1 种信号)，然后用
+# 下面这段代码(127~140)的用途是首先取当前任务结构中的信号位图(32 位，每位代表 1 种信号)，然后用
 # 人物结构中的信号阻塞(屏蔽)码，阻塞不允许的信号位，取得数值最小的信号值，再把原信号位途中该信号
 # 对应的位复位(置 0)，最后将该信号值作为参数之一调用 do_signal(). do_signal() 在(kernel/signal.c 22222)
 # 其参数包括 13 各入栈信息。
@@ -165,9 +165,9 @@ _coprocessor_error:
   jmp _math_error # 执行 C 函数 _math_error() (kernel/math/math_emulate.c 2222).
 # int 7 -- 设备不存在或协处理器不存在(Coprocessor not available)
 # 若控制寄存器 CR0 的 EM 标志置位，则当 CPU 执行一个转移指令时就会引发该中断，这样就可以有机会让这个
-# 中断处理程序模拟转义指令(2222 行)。CR0 的 TS 标志是在 CPU 执行任务转换时设置的。TS 可以用来
+# 中断处理程序模拟转义指令(194 行)。CR0 的 TS 标志是在 CPU 执行任务转换时设置的。TS 可以用来
 # 确定什么时候协处理器中的内容与 CPU 正在执行的任务不匹配了。当 CPU 在运行一个转义指令时发现 TS
-# 置位了，就会引发该中断。此时就应该恢复新任务的协处理器执行状态(2222 行)。参见(kernel/sched.c 222)
+# 置位了，就会引发该中断。此时就应该恢复新任务的协处理器执行状态(190 行)。参见(kernel/sched.c 77)
 # 中的说明。该中断最后将转移到标号 ret_from_sys_call 处执行(检测并处理信号)。
 .align 2
 _device_not_available:
@@ -188,16 +188,16 @@ _device_not_available:
   movl %cr0,%eax
   testl $0x4,%eax # EM (math emulation bit)
   je _math_state_restore  # 如果不是 EM 引起的中断，则恢复新任务协处理器状态
-  pushl %ebp  # 执行 C 函数 math_state_restore() (kernel/sched.c 2222)
+  pushl %ebp  # 执行 C 函数 math_state_restore() (kernel/sched.c 77)
   pushl %esi
   pushl %edi
   call _math_emulate  # 调用 C 函数 math_emulate (kernel/math/math_emulate.c 2222)
   popl %edi
   popl %esi
   popl %ebp
-  ret # 这里的 ret 将跳转到 ret_from_sys_call (2222 行)
+  ret # 这里的 ret 将跳转到 ret_from_sys_call (107 行)
 # int32 -- (int 0x20)时钟中断处理程序。中断频率被设置为 100Hz (include/linux/sched.h 222)
-# 定时芯片 8253/8254 是在(kernel/sched.c 22222)处初始化的。因此这里 jiffies 每 10 毫秒
+# 定时芯片 8253/8254 是在(kernel/sched.c 431)处初始化的。因此这里 jiffies 每 10 毫秒
 # 加 1.这段代码将 jiffies 增 1，发送结束中断指令给 8259 控制器，然后用当前特权级作为参数调用
 # C 函数 do_timer(long CPL)。当调用返回时转去检测并处理信号
 .align 2
@@ -222,7 +222,7 @@ _timer_interrupt:
   movl CS(%esp),%eax
   andl $3,%eax
   pushl %eax
-# do_timer(CPL) 执行任务切换、计时等工作，在 kernel/sched.c 2222 行实现
+# do_timer(CPL) 执行任务切换、计时等工作，在 kernel/sched.c 329 行实现
   call _do_timer  # 'do_timer(long CPL)'does everything from
   addl $4,%esp  # task switching to accounting
   jmp ret_from_sys_call

@@ -19,7 +19,7 @@
 # 编译后所生成模块中对应的名称。'_do_divide_error' 函数在 traps.c 中。
 _divide_error:
   pushl $_do_divide_error # 首先把将要调用的函数地址入栈。这段程序的出错号为 0
-no_error_code:  # 这里是无出错号处理的入口处，见下面 222 行等
+no_error_code:  # 这里是无出错号处理的入口处，见下面 56 行等
   xchgl %eax,(%esp) # _do_divide_error 的地址->eax,eax 被交换入栈
   pushl %ebx
   pushl %ecx
@@ -95,7 +95,7 @@ _irq13: # int45--( = 0x20+13 )数学协处理器(Coprocessor)发出的中断
   jmp 1f
   outb %AL,$0xA0  # 再向 8259 从中断控制芯片发送 EOI(中断结束)信号。
   popl %eax
-  jmp _coprocessor_error  # _coprocessor_error 原来在本文件中，现在已经放到(kernel/system_call.s 2222 行)
+  jmp _coprocessor_error  # _coprocessor_error 原来在本文件中，现在已经放到(kernel/system_call.s 151 行)
 # 以下中断在调用时会在中断返回地址之后将出错号压入堆栈，因此返回时也需要将出错号弹出。
 # int8--双出错故障。(下面这段代码的含义参见图5-3b).
 _double_fault:
@@ -147,7 +147,7 @@ _stack_segment: # int12--堆栈段错误
 _general_protection:  # int13--一般保护性出错
   pushl $_do_general_protection
   jmp no_error_code
-# int7--设备不存在(_device_not_available),在 kernel/system_call.s 2222 行
+# int7--设备不存在(_device_not_available),在 kernel/system_call.s 173 行
 # int14--页错误(_page_fault),在 mm/page.s 2222 行
-# int16--协处理器错误(_coprocessor_error),在 system_call.s 2222 行
+# int16--协处理器错误(_coprocessor_error),在 system_call.s 151 行
 # 时钟中断 int 0x20(_timer_interrupt)和系统调用 int 0x80(system_call)在system_call.s

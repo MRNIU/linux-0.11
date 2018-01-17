@@ -45,7 +45,7 @@ void int3(void);  // int3 (kernel/asm.s 62)
 void overflow(void);  // int4 (kernel/asm.s 66)
 void bounds(void);  // int5 (kernel/asm.s 70)
 void invalid_op(void);  // int6 (kernel/asm.s 74)
-void device_not_available(void);  // int7 (kernel/system_call.s 2222)
+void device_not_available(void);  // int7 (kernel/system_call.s 173)
 void double_fault(void);  // int8 (kernel/asm.s 101)
 void coprocessor_segment_overrun(void); // int9 (kernel/asm.s 78)
 void invalid_TSS(void); // int10 (kernel/asm.s 135)
@@ -53,9 +53,9 @@ void segment_not_present(void); // int11 (kernel/asm.s 139)
 void stack_segment(void); // int12 (kernel/asm.s 143)
 void general_protection(void);  // int13 (kernel/asm.s 147)
 void page_fault(void);  // int14 (mm/page.s 22222)
-void coprocessor_error(void); // int16 (kernel/system_call.s 2222)
+void coprocessor_error(void); // int16 (kernel/system_call.s 151)
 void reserved(void);  // int15 (kernel/asm.s 82)
-void parallel_interrupt(void);  // int39 (kernel/system_call.s 2222)
+void parallel_interrupt(void);  // int39 (kernel/system_call.s 325)
 void irq13(void); // int45 协处理器中断处理(kernel/asm.s 86)
 // 该子程序用来打印出错中断的名称、出错号、调用程序的 EIP,EFLAGS,ESP,fs 段寄存器值、段的基址、
 // 段的长度、进程号 pid 、任务号、10 字节指令码。如果堆栈在用户段，则还打印 16 字节的堆栈内容。
@@ -177,8 +177,7 @@ void trap_init(){
 	set_trap_gate(15,&reserved);
 	set_trap_gate(16,&coprocessor_error);
   for(i=17;i<48;i++)  // 将 int17~48 的陷阱门先均设置为 resored ，以后各硬件初始化时
-                      // 会重新设置自己的陷阱门
-    set_trap_gate(i,&reserved);
+    set_trap_gate(i,&reserved); // 会重新设置自己的陷阱门
   set_trap_gate(45,&irq13); // 设置协处理器的陷阱门
   outb_p(inb_p(0x21)&0xfb,0x21);  // 允许主 8259A 芯片的 IRQ2 中断请求。
   outb_p(inb_p(0xA1)&0xdf,0xA1);  // 允许从 8259A 芯片的 IRQ13 中断请求。
