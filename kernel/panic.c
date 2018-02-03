@@ -17,5 +17,5 @@ volatile void panic(const char * s){
     printk("In swapper task - not syncing\n\r");
   else
     sys_sync();
-  for(;;;
+  for(;;);
 }
