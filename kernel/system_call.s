@@ -278,7 +278,7 @@ _hd_interrupt:
                     # 函数地址(blk_drv/hd.c)，放到 edx 后就将 do_hd 置为 NULL
   testl %edx,%edx   # 测试函数指针是否为 Null
   jne 1f  # 若空，则使指针指向 C 函数 unexpected_hd_interrupt()
-  movl $_unexpected_hd_interrupt,%edx # (kernel/blk_drv/hd.c 22222)
+  movl $_unexpected_hd_interrupt,%edx # (kernel/blk_drv/hd.c 250)
   outb %al,$0x20  # 送主 8259A 中断控制器 EOI 指令(结束硬件中断)
   call * %edx # "interesting"way of handling intr.
   pop %fs # 上句调用 do_hd 指向的 C 函数
