@@ -50,11 +50,11 @@ static inline _syscall0(int,sync) //int sync() 系统调用：更新文件系统
 
 static char printbuf[1024]; // 静态字符串数组，用作内核显示信息的缓存。
 
-extern int vsprintf();  // 送格式化输出到一字符串中(在 kernel/vsprintf.c 2222 行)
-extern void init(void); // 函数原形，初始化(在 2222 行)。
+extern int vsprintf();  // 送格式化输出到一字符串中(在 kernel/vsprintf.c 103 行)
+extern void init(void); // 函数原形，初始化(在 198 行)。
 extern void blk_dev_init(void); // 块设备初始化子程序(blk_drv/ll_rw_blk.c 2222 行)
 extern void chr_dev_init(void); // 字符设备初始化(chr_drv_tty_io.c 2222 行)
-extern void hd_init(void);  // 硬盘初始化程序(blk_drv/hd.c 2222 行)
+extern void hd_init(void);  // 硬盘初始化程序(blk_drv/hd.c 361 行)
 extern void floppy_init(void);  // 软驱初始化程序(blk_drv/floppy.c 2222 行)
 extern void mem_init(long start,long end);  // 内存管理初始化(mm/memory.c 2222 行)
 extern long rd_init(long mem_start,long length);  // 虚拟盘初始化(blk_drv/ramdisk.c 2222 行)
