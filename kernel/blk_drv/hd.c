@@ -19,7 +19,7 @@
 #include <asm/segment.h> // 段操作头文件。定义了有关段寄存器操作的嵌入式汇编函数。
 
 #define MAJOR_NR 3 // 硬盘主设备号是 3，必须在包含进 blk.h 文件之前定义
-#include "blk.h" // 快设备头文件。定义请求数据结构、块设备数据结构和宏函数等信息。
+#include "blk.h" // 块设备头文件。定义请求数据结构、块设备数据结构和宏函数等信息。
 
 #define CMOS_READ(addr)({\  // 读 CMOS 参数宏函数
 outb_p(0x80|addr,0x70);\

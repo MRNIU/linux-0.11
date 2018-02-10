@@ -25,7 +25,7 @@
 #define MAJOR_NR 1  // 内存主设备号是 1
 #include "blk.h"
 
-char * rd_start;  // 虚拟盘在内存的起始位置。在 2222 行初始化函数 rd_init() 中确定
+char * rd_start;  // 虚拟盘在内存的起始位置。在 61 行初始化函数 rd_init() 中确定
 int rd_length=0;  // 虚拟盘所占内存大小(字节)
 // 执行虚拟盘(ramdisk)读写操作。程序结构与 do_hd_request() 类似(blk_drv/hd.c 305)
 void do_rd_request(void){
