@@ -233,8 +233,8 @@ static void scrdown(void){
             :"ax","cx","di","si");
   }
 }
-// 光标位置下移一行(1f--line feed 换行)
-static void 1f(void){
+// 光标位置下移一行(lf--line feed 换行)
+static void lf(void){
 // 如果光标没有在倒数第 2 行之后，则直接修改光标当前行变量 y++,并调整光标对应显示内存位置 pos(
 // 加上屏幕一行字符所对应的内容长度)
   if(y+1<bottom){
@@ -340,4 +340,189 @@ void csi_m(void){
   int i;
 
   for(i=0;i<=npar;i++)
+    switch(par[i]){
+      case 0:attr=0x07;break;
+      case 1:attr=0x0f;break;
+      case 4:attr=0x0f;break;
+      case 7:attr=0x70;break;
+      case 27:attr=0x07;break;
+    }
+}
+// 根据设置显示光标
+// 根据显示内存光标对应位置 pos，设置显示龙之气光标的显示位置
+static inline coid set_cursor(void){
+  cli();
+// 首先使用所以没寄存器端口选择显示控制数据寄存器 r14(光标当前显示位置高字节)，然后写入光标当前
+// 位置高字节(向右移动 9 位表示高字节移到低字节再除以 2).是相对于默认显示内存操作的。
+  outb_p(14,video_port_reg);
+  outb_p(0xff&((pos-video_mem_start)>>9),video_port_val);
+// 在使用索引寄存器选择 r15，并将光标当前位置低字节写入其中
+  outb_p(15,video_port_reg);
+  outb_p(0xff&((pos-video_mem_start)>>1),video_port_val);
+  sti();
+}
+// 发送对终端 VT100 的响应序列。将响应序列放入读缓冲队列中
+static void respond(strict tty_struct * tty){
+  char * p=RESPONSE;
+
+  cli();  // 关中断
+  while(*p){  // 将字符序列放入写队列
+    PUTCH(*p,tty->read_q);
+    p++;
+  }
+  sti();  // 开中断
+  copy_to_cooked(tty);  // 转换成规范模式(放入辅助队列中)
+}
+// 在光标处插入一空格字符
+static void insert_char(void){
+  int i=x;
+  unsigned short tmp,old=video_erase_char;
+  unsigned short *p=(unsigned short *)pos;
+// 光标开始的所有字符右移一格，并将擦除字符插入在光标所在处
+  while(i++<video_num_columns){
+    tmp=*p;
+    *p=old;
+    old=tmp;
+    p++;
+  }
+}
+// 在光标处插入一行(则光标将处在新的空行上)。将屏幕从光标所在行到屏幕底向下卷动一行
+static void insert_char(void){
+  int oldtop,oldbottom;
+
+  oldtop=top; // 保存原 top,bottom 值
+  oldbottom=bottom;
+  top=y;  // 设置屏幕卷动开始行
+  bottom=video_num_lines; // 设置屏幕卷动最后行
+  scrdown();  // 从光标开始处，屏幕内容向下滚动一行
+  top=oldtop; // 恢复原 top,bottom 值
+  bottom-oldbottom;
+}
+// 删除光标处的一的字符
+static void delete_char(void){
+  int i;
+  unsigned short *p=(unsigned short *)pos;
+
+  if(x>=video_num_columns)return; // 如果光标超出屏幕最右列，则返回
+  i=x;
+  while(++i<video_num_columns){
+    *p=*(p+1);
+    p++;
+  }
+  *p=video_erase_char;  // 最后一个字符处填入擦除字符(空格字符)
+}
+// 删除光标所在行。从光标所在行开始屏幕内容上卷一行
+static void delete_line(void){
+  int oldtop,oldbottom;
+
+  oldtop=top; // 保存原 top,bottom 值
+  oldbottom=bottom;
+  top=y;  // 设置屏幕卷动开始行
+  bottom=video_num_lines; // 设置屏幕卷动最后行
+  scrup();  // 从光标开始处，屏幕内容向上滚动一行
+  top=oldtop; // 恢复原 top,bottom 值
+  bottom=oldbottom;
+}
+// 在光标处插入 nr 个字符。ANSI 转义字符序列：'ESC[n@' 参数 nr=上面 n
+static void csi_at(unsigned int nr){
+// 如果插入的字符数大于一行字符数，则截为一行字符数；若插入字符数 nr 为 0，则插入 1 个字符
+  if(nr>video_num_columns)  nr=video_num_columns;
+  else if(!nr)  nr=1;
+  while(nr--) insert_char();  // 循环插入指定的字符数
+}
+// 在光标位置处插入 nr 行。ANSI 转义字符序列 'ESC[nL'
+static void sci_L(unsigned int nr){
+// 如果插入的行数大于屏幕最多行数，则截为屏幕显示行数；若插入行数 nr 为 0，则插入 1 行
+  if(nr>video_num_lines)  nr=video_num_lines;
+  else if(!nr)  nr=1;
+  while(nr--) insert_line();  // 循环插入指定的字符数
+}
+// 在光标位置插入 nr 个字符。ANSI 转义序列：'ESC[nP'
+static void csi_P(unsigned int nr){
+  if(nr>video_num_columns)  nr=video_num_columns;
+  else if(!nr)  nr=1;
+  while(nr--) delete_char();  // 循环删除指定字符数 nr
+}
+// 删除光标处的 nr 行。ANSI 转义序列：'ESC[nM'
+static void sci_M(unsigned int nr){
+// 如果删除的行数大于屏幕最多行数，则截为屏幕显示行数；若删除的行数 nr 为 0，则删除 1 行。
+  if(nr>video_num_lines)  nr=video_num_lines;
+  else if(!nr)  nr=1;
+  while(nr--) delete_line();  // 循环删除指定行数
+}
+
+static int saved_x=0; // 保存的光标列号
+static int saved_y=0; // 保存的光标行号
+
+static void save_cur(void){
+  saved_x=x;
+  saved_y=y;
+}
+// 恢复保存的光标位置
+static void restore_cur(void){
+  gotoxy(saved_x,saved_y);
+}
+// 控制台函数。从中断对应的 tty 写缓冲队列中取字符，并显示在屏幕上
+void con_write(struct tty_struct * tty){
+  int nr;
+  char c;
+// 首先取得写缓冲队列中现有字符数 ne，然后针对每个字符进行处理，并显示在屏幕上
+  nr=CHARS(tty->write_q);
+  while(nr--){
+// 从写队列中取一个字符 c，根据前面所处理字符的状态 state 分别处理。状态之间的转换关系为：
+// state=0:初始状态，或者原是状态 4，或者原是状态 1，但字符不是 '[';
+//  1:原是状态 0，并且字符是转义字符 ESC(0x1b=033=27)
+//  2:原是状态 1，并且字符是 '['
+//  3:原是状态 2；或者原是状态 3，并且字符是 ';' 或数字
+//  4:原是状态 3，并且字符不是 ';' 或数字
+    GETCH(tty->write_q,c);
+    switch(state){
+      case 0:
+// 如果字符不是控制字符(c>31)，并且也不是扩展字符(c<127)，则
+        if(c>31&&c<127){
+// 若当前光标处在行末端或末端意外，则将黄彪移到下行头列。并调整光标位置对应的内存指针 pos
+          if(x>=video_num_columns){
+            x-=video_num_columns;
+            pos-=video_size_row;
+            lf();
+          }
+// 将字符 c 写到显示内存中 pos 处，并将光标右移 1 列，同时也将 pos 对应地移动 2 个字节
+          __asm__("movb_attr,%%ah\n\t"
+                  "movw %%ax,%1\n\t"
+                  ::"a"(c),"m"(*(short *)pos)
+                  :"ax");
+          pos+=2;
+          x++;
+// 如果字符 c 是转义字符 ESC，则转换状态 state 到 1
+        }
+        else if(c==27)  state=1;
+// 如果字符 c 是换行符(10)，或是垂直制表符 VT(11)，或者是换页符 FF(12),则移动光标到下一行。
+        else if(c==10||c==11||c==12)  lf();
+// 如果字符 c 是回车符 CR(13),则将光标移动到头列(0 列)
+        else if(c==13)  cr();
+// 如果字符 c 是DEL(127)，则将光标右边一字符擦除(用空格字符替代)，并将光标移到被擦除位置
+        else if(c==ERASE_CHAR(tty))   del();
+// 如果字符 c 是 BS(backspace,8)，则将光标左移 1 格，并相应调整光标对应内存位置指针 pos
+        else if(c==8){
+          if(x){
+            x--;
+            pos-=2;
+          }
+// 如果字符 c 是水平制表符 TAB(9)，则将光标移到 8 的倍数上。若此时光标列数超出屏幕最大列数，
+// 则将光标移到下一行上
+        }
+        else if(c==9){
+          c=8-(x&7);
+          x+=c;
+          pos+=c<<1;
+          if(x>video_num_columns){
+            x-=video_num_columns;
+            pos-=video_size_row;
+            lf();
+          }
+          c=9;
+//
+        }
+    }
+  }
 }
