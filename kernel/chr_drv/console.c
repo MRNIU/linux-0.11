@@ -521,8 +521,261 @@ void con_write(struct tty_struct * tty){
             lf();
           }
           c=9;
-//
+// 如果字符 c 是响铃符 BEL(7),则调用蜂鸣函数，是扬声器发声。
+        }
+        else if(c==7) sysbeep();
+        break;
+// 如果原状态是 0，并且字符是转义字符 ESC(0x1b=033=27),则转到状态 1 处理
+      case 1:
+        state=0;
+// 如果字符 c 是  '[',则将状态 state 转到 2
+        if(c=='[')  state=2;
+// 如果字符 c 是 'E',则光标移到下一行开始处(0 列)
+        else if(c=='E') gotoxy(0,y+1);
+// 如果字符 c 是 'M',则光标上移一行
+        else if(c=='M') ri();
+// 如果字符 c 是 'D',则光标下移一行
+        else if(c=='D') lf();
+// 如果字符 c 是 'Z',则发送终端应答字符序列
+        else if(c=='Z') respond(tty);
+// 如果字符 c 是 '7',则保存当前光标位置。注意这里代码写错！应该是(c=='7')，这里已改正
+        else if(c=='7') save_cur();
+// 如果字符 c 是 '8',则恢复到原保存的光标位置。注意这里代码写错！应该是(c=='8')，这里已改正
+        else if(c=='8') restore_cur();
+        break;
+// 如果原状态是 1，并且上一字符是 '['，则转到状态 2 来处理
+      case 2:
+// 首先对 ESC 转义字符序列参数使用的处理数组 par[] 清零，索引变量 npar 指向首项，并且设置状态
+// 为 3.若此时字符不是 '?'，则直接转到状态 3 取处理，否则去读一字符，再到状态 3处理代码处
+        for(npar=0;npar<NPAR;npar++)  par[npar]=0;
+        npar=0;
+        state=3;
+        if(ques=(c=='?')) break;
+// 如果原来状态是 2；或者原来就是状态 3，但原字符是 ';' 或数字，则在下面处理
+      case 3:
+// 如果字符 c 是分号 ';',并且数组 par 未满，则索引值加 1
+        if(c==';'&&npar<NPAR-1){
+          npar++;
+          break;
+// 如果字符 c 是数字字符 '0'-'9' ,则将该字符转换成数值并与 npar 所索引的项组成 10 进制数。
+        }
+        else if(c>='0'&&c<='9'){
+          par[npar]=10*par[npar]+c-'0';
+          break;
+        }
+        else state=4; // 否则转到状态 4
+// 如果原状态是状态 3，并且字符不是 ';' 或数字，则转到状态 4 处理。首先复位状态 state=0
+      case 4:
+        stete=0;
+        switch(c){
+// 如果字符 c 是 'G' 或 '`' ，则 par[] 中第一个参数代表列号。若列好不为零，则将光标右移一格
+          case 'G': case '`':
+            if(par[0])  par[0]--;
+            gotoxy(par[0],y);
+            break;
+// 如果字符 c 是 'A',则第一个参数代表光标上移的行数。若参数为 0 则上移一行
+          case 'A':
+            if(!par[0]) par[0]++;
+            gotoxy(x,y-par[0]);
+            break;
+// 如果字符 c 是 'B' 或 'e',则第一个参数代表光标下移的行数。若参数为 0 则下移一行
+          case 'B': case 'e':
+            if(!par[0]) par[0]++;
+            gotoxy(x,y+par[0]);
+            break;
+// 如果字符 c 是 'C' 或 'a',则第一个参数代表光标右移的格数。若参数为 0 则右移一格
+          case 'C':case 'a':
+            if(!par[0]) par[0]++;
+            gotoxy(x+par[0],y);
+            break;
+// 如果字符 c 是 'D',则第一个参数代表光标左移的格数。若参数为 0 则左移一格
+          case 'D':
+            if(!par[0]) par[0]++;
+            gotoxy(x-par[0],y);
+            break;
+// 如果字符 c 是 'E',则第一个参数代表光标向下移动的行数。若参数为 0 则下移一行
+          case 'E':
+            if(!par[0]) par[0]++;
+            gotoxy(0,y+par[0]);
+            break;
+// 如果字符 c 是 'F',则第一个参数代表光标向上移动的行数。若参数为 0 则上移一行
+          case 'F':
+            if(!par[0]) par[0]++;
+            gotoxy(0,y-par[0]);
+            break;
+// 如果字符 c 是 'd',则第一个参数代表光标所需在的行号(从 0 计数)
+          case 'd':
+            if(par[0]) par[0]--;
+            gotoxy(x,par[0]);
+            break;
+// 如果字符 c 是 'H'  或  'f',则第一个参数代表光标移到的行号，第二个参数代表光标移到的标号
+          case 'H' case 'f':
+            if(par[0]) par[0]--;
+            if(par[1]) par[1]--;
+            gotoxy(par[1],par[0]);
+            break;
+// 如果字符 c 是 'J',则第一个参数代表以光标所处位置清屏的方式:
+// ANSI 转义序列:'ESC[sJ'(s=0 删除整行光标到屏幕底端；1 删除屏幕开始到光标处；2 整屏删除)
+          case 'J':
+            csi_J(par[0]);
+            break;
+// 如果字符 c 是 'K',则第一个参数代表以光标所在位置对行中字符进行删除处理的方式
+// ANSI 转义序列:'ESC[sK'(s=0 删除到行尾；1 从开始删除；2 整行都删除)
+          case 'K':
+            csi_K(par[0]);
+            break;
+// 如果字符 c 是 'L',表示在光标位置处插入 n 行(ANSI 转义字符序列 'ESC[nL')
+          case 'L':
+            csi_L(par[0]);
+            break;
+// 如果字符 c 是 'M',表示在光标位置处删除 n 行(ANSI 转义字符序列 'ESC[nM')
+          case 'M':
+  					csi_M(par[0]);
+  					break;
+// 如果字符 c 是 'P',表示在光标位置处删除 n 个字符(ANSI 转义字符序列 'ESC[nP')
+  				case 'P':
+  					csi_P(par[0]);
+  					break;
+// 如果字符 c 是 '@',表示在光标位置处插入 n 个字符(ANSI 转义字符序列 'ESC[n@')
+  				case '@':
+						csi_at(par[0]);
+            break;
+// 如果字符 c 是 'm',表示改变光标处字符的显示属性，比如加粗、加下划线、闪烁、反显等。
+// ANSI 转义字符序列 'ESC[nm'.n=0 正常显示；1 加粗；4 加下划线；7 反显；27 正常显示
+  				case 'm':
+  					csi_m();
+  					break;
+// 如果字符 c 是 'r',则表示用两个参数设置滚屏的起始行号和终止行号
+  				case 'r':
+  					if(par[0])par[0]--;
+						if(!par[1])par[1]=video_num_lines;
+  					if(par[0]<par[1]&&par[1]<=video_num_lines){
+            	top=par[0];
+  						bottom=par[1];
+  					}
+  					break;
+// 如果字符 c 是 's',则表示保存当前光标所在位置
+  				case 's':
+  					save_cur();
+  					break;
+// 如果字符 c 是 'u',则表示恢复光标到原保存的位置处
+  				case 'u':
+  					restore_cur();
+						break;
         }
     }
   }
+  set_cursor(); // 最后根据上面设置的光标位置，想显示控制器发送光标显示位置
+}
+
+/*
+ * void con_init(void);
+ *
+ * This routine initalizes console interrupts,and does nothing else. If you want
+ * the screen to clear, call tty_write with the appropriate escape-sequece.
+ *
+ * Reads the information preserved by setup.s to determine the current display
+ * type and sets everything accordingly
+ */
+/* void con_init(void);
+ * 这个子程序初始化控制台中断，其它什么都不做。如果你想让屏幕干净的话，就是用适当的转义字符序列
+ * 调用 tty_write() 函数
+ * 读取 setup.s 程序保存的信息，用以确定当前显示器类型，并且设置所有相关参数
+ */
+void con_int(void){
+  register unsigned char a;
+  char *display_desc="????";
+  char *display_ptr;
+
+  video_num_columns=ORIG_VIDEO_COLS;  // 显示器显示字符列数
+  video_size_row=video_num_columns*2; // 每行需使用字节数
+  video_num_lines=ORIG_VIDEO_LINES; // 显示器显示字符行数
+  video_page=ORIG_VIDEO_PAGE; // 当前显示页面
+  video_erase_char=0x0720;  // 擦除字符(0x20 显示字符，0x07 是属性)
+
+// 如果原始显示模式等于 7，则表示是单色显示器
+  if(ORIG_VIDEO_MODE==7){ // Is this a monochrome display?
+    video_mem_start=0xb0000;  // 设置单显映像内存起始地址
+    video_port_reg=0x3b4; // 设置单显索引寄存器端口
+    video_port_val=0x3b5; // 设置单显数据寄存器端口
+// 根据 BIOS 中断 int 0x10 功能 0x12 获得的显示模式信息，判断显示卡单色显示卡还是彩色显示卡。
+// 如果使用上述中断功能所得到的 BX 寄存器返回值不等于 0x10，则说明是 EGA 卡。因此初始显示类型
+// 为 EGA 单色；所使用映像内存末端地址为 -xb800;并设置显示器描述字符串为 'EGAm'.在系统初始化
+// 期间显示器描述字符串将显示在屏幕上的右上角。
+    if((ORIG_VIDEO_EGA_BX&0xff)!=0x10){
+      video_type=VIDEO_TYPE_EGAM; // 设置显示类型(EGA 单色)
+      video_mem_end=0xb8000;  // 设置显示内存末端地址
+      display_desc="EGAm";  // 设置显示描述字符串
+    }
+// 如果 BX 寄存器的值等于 0x10,则说明是单色显示卡 MDA。则设置相应参数
+    else{
+      video_type=VIDEO_TYPE_MDA;
+      video_mem_end=0xb2000;
+      display_desc="*MDA";
+    }
+  }
+// 如果显示模式不为 7，则为彩色显示模式。此时所用的显示内存起始地址为 0xb800;显示控制索引寄存器
+// 端口地址为 0x3d4；数据寄存器端口地址为 0x3d5.
+  else{ // If not,it is color.
+    video_mem_start=0xb8000;  // 显示内存起始地址
+    video_port_reg=0x3d4; // 设置彩色显示索引寄存器端口
+    video_port_val=0x3d5; // 设置猜测显示数据寄存器端口
+// 在判断显示卡类别。如果 BX 不等于 0x10，则说明是 EGA 显示卡
+    if((ORIG_VIDEO_EGA_BX&0xff)!=0x10){
+      video_type=VIDEO_TYPE_EGAC; // 设置显示类型(EGA 彩色)
+      video_mem_end=0xbc000;  // 设置显示内存末端地址
+      display_desc="EGAc";  // 设置显示描述字符串
+    }
+// 如果 BX 寄存器的值等于 0x10，则说明是 CGA 显示卡。则设置相应参数
+    else{
+      video_type=VIDEO_TYPE_CGA;  // 设置显示类型(CGA)
+      video_mem_end=0xba000;  // 设置显示内存末端地址
+      display_desc="*CGA";  // 设置显示描述字符串
+    }
+  }
+  // 让用户知道我们正在使用哪一类显示驱动器程序
+  // Let the user known what kind of display driver we are using
+// 在屏幕的右上角显示显示描述字符串。采用的方法是直接将字符串写到显示内存的相应位置处。首先将
+// 显示指针 display_ptr 指到屏幕第一行右端差 4 个字符处(每个字符需 2 个字节，因此减 8).
+  display_ptr=((char*)video_mem_start)+video_size_row-8;
+  while(*display_desc){  // 然后循环复制串中字符，且每复制一字符都空开一属性字节
+    *display_ptr++=*display_desc++; // 复制字符
+    display_ptr++;  // 空开属性字节位置
+  }
+  // 初始化用于滚屏的变量(主要用于 EGA/VGA)
+  // Initialize the variables used for scrolling (mostly EGA/VGA)
+
+  origin=video_mem_start; // 滚屏起始显示内存地址
+  scr_end=video_mem_start+video_num_lines*video_size_row; // 滚屏结束内存地址
+  top=0;  // 最顶行号
+  bottom=video_num_lines; // 最低行号
+
+  gotoxy(ORIG_X,ORIG_Y);  // 初始化光标位置 x,y 和对应的内存位置 pos
+  set_trap_gate(0x21,&keyboard_interrupt);  // 设置键盘中断陷阱门
+  outb_p(inb_p(0x21)&0xfd,0x21);  // 取消 8259A 中对键盘中断的屏蔽，允许 IRQ1
+  a=inb_p(0x61);  // 延迟读取键盘端口 0x61(8225A 端口 PB)
+  outb_p(a|0x80,0x61);  // 设置禁止键盘工作(位 7 置位)
+  outb(a,0x61); // 在允许键盘工作，用以复位键盘操作
+}
+// from bsd-net-2:
+// 停止蜂鸣。复位 8255A PB 位端口的位 1 和位 0
+void sysbeepstop(void){
+  // disable counter 2  禁止定时器 2
+  outb_p(inb_p(0x61)&0xFC,0x61);
+}
+
+int beepcount=0;
+// 开通蜂鸣。8225A 芯片 PB 端口的位 1用作扬声器的开门信号；位 0 用作 8253 定时器 2 的门信号，
+// 该定时器的输出脉冲送往扬声器，作为扬声器发生的频率。因此要是扬声器蜂鸣，需要两步：首先开启
+// PB 端口位 1 和位 0(置位)，然后设置定时器发送一定的定时频率
+static void sysbeep(void){
+  // enable counter 2  开启定时器 2
+  outb_p(inb_p(0x61)|3,0x61);
+  // set command for counter 2,2 byte write  送设置定时器 2 命令
+  outb_p(0xB6,0x43);
+  // send 0x637 for 750 Hz  设置频率为 750 Hz，因此送定时值 0x637
+  outb_p(0x37,0x42;
+  outb(inb_p(0x06,0x42);
+  // 1/8 second  蜂鸣时间为 1/8 s
+  beepcount=HZ/8;
 }
