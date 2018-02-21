@@ -30,7 +30,7 @@ startup	= 256 # chars left in write queue when we restart it
 
 .align 2
 _rs1_interrupt: # 串行端口 1 中断处理程序入口点
-	pushl $_table_list+8 # tty 表中对应串口 1 的读写缓冲指针的地址入栈(tty_io.c,2222)
+	pushl $_table_list+8 # tty 表中对应串口 1 的读写缓冲指针的地址入栈(tty_io.c,22222)
 	jmp rs_int
 .align 2
 _rs2_interrupt: # 串行端口 2 中断处理程序的入口点
