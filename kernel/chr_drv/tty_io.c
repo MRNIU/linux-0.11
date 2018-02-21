@@ -396,4 +396,4 @@ void do_tty_interrupt(int tty){
   copy_to_cooked(tty_table+tty);
 }
 
-void chr_dev_init(void){}  // 字符设备初始化函数。空，为以后扩展作准备。
+void chr_dev_init(void){}  // 字符设备初始化函数。空，为以后扩展作准备.
