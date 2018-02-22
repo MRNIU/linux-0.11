@@ -144,7 +144,7 @@ ok_load_setup:
       jne root_defined
       seg cs
       mov bx,sectors
-! 取第 222 行保存的每磁道扇区数。若 sectors=15 ，则说明是 1.2 MB 的驱动器；如果 sectors=18 ，
+! 取第 109 行保存的每磁道扇区数。若 sectors=15 ，则说明是 1.2 MB 的驱动器；如果 sectors=18 ，
 ！则说明是 1.44 MB 软驱。因为是可引导的驱动器，所以肯定是 A 驱。
       mov ax,#0x0208  ! /dev/ps0 -1.2 MB
       cmp bx,#15      ！判断每磁道扇区数是否 =15
