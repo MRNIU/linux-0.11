@@ -222,7 +222,7 @@ static int moff_timer[4]={0,0,0,0}; // 存放软驱电动机停转之前需维�
 unsigned char current_DOR=0x0C; // 数字输出寄存器(初值:允许 DMA 和请求中断、启动 FDC)
 // 指定软盘到正常运转状态所需延迟滴答数(时间)。 nr -- 软驱号(0-3)，返回值为滴答数。
 int ticks_to_floppy_on(unsigned int nr){
-  extern unsigned char selected;  // 当前选中的软盘号(blk_drv/floppy.c 22222)
+  extern unsigned char selected;  // 当前选中的软盘号(blk_drv/floppy.c 139)
   unsigned char mask=0x10<<nr;  // 所选软驱对应数字输出寄存器中启动马达比特位。
 
   if(nr>3)
@@ -327,8 +327,8 @@ void add_timer(long jiffies,void (*fn)(void)){
 // 参数 cpl 是当前特权级 0 或 3 ，0 表示内核代码在执行。
 // 对于一个进程由于执行时间片用完时，则进行任务切换。并执行一个计时更新工作。
 void do_timer(long cpl){
-  extern int beepcount; // 扬声器发声时间滴答数 (kernel/chr_drv/console.c 22222)
-  extern void sysbeepstop(void);  // 关闭扬声器 (kernel/chr_drv/console.c 2222)
+  extern int beepcount; // 扬声器发声时间滴答数 (kernel/chr_drv/console.c 767)
+  extern void sysbeepstop(void);  // 关闭扬声器 (kernel/chr_drv/console.c 762)
 
   if(beepcount) // 如果发生计数次数到，则关闭发声
     if(!--beepcount)  // 向 0x61 口发送命令，复位位 0 和 1.
