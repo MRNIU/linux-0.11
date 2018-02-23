@@ -164,7 +164,7 @@ int sys_setup(void * BIOS){
   }
   if(NR_HD) // 如果有硬盘存在并且已读入分区表，则打印分区表正常信息。
     printk("Partition table %s ok.\n\r",(NR_HD>1)?"s":"");
-  rd_load();  // 加载(创建)RAMDISK(kernel/blk_drv/ramdisk.c 2222)
+  rd_load();  // 加载(创建)RAMDISK(kernel/blk_drv/ramdisk.c 80)
   mount_root(); // 安装根文件系统(fs/super.c 22222)
   return 0;
 }

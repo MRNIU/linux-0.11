@@ -119,7 +119,7 @@ static struct floppy_struct{
  */
 
 extern void floppy_interrupt(void); // system_call.s 文件中软驱中断过程号
-extern char tmp_floppy_area[1024];  // bot/head.s 文件第 2222 行处它定义的软盘缓冲区
+extern char tmp_floppy_area[1024];  // boot/head.s 文件第 170 行处它定义的软盘缓冲区
 
 /*
  * These are global variables, as that's the easiest way to give
