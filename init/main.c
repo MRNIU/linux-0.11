@@ -52,12 +52,12 @@ static char printbuf[1024]; // 静态字符串数组，用作内核显示信息�
 
 extern int vsprintf();  // 送格式化输出到一字符串中(在 kernel/vsprintf.c 103 行)
 extern void init(void); // 函数原形，初始化(在 198 行)。
-extern void blk_dev_init(void); // 块设备初始化子程序(blk_drv/ll_rw_blk.c 2222 行)
-extern void chr_dev_init(void); // 字符设备初始化(chr_drv_tty_io.c 2222 行)
+extern void blk_dev_init(void); // 块设备初始化子程序(blk_drv/ll_rw_blk.c 168 行)
+extern void chr_dev_init(void); // 字符设备初始化(chr_drv/tty_io.c 399 行)
 extern void hd_init(void);  // 硬盘初始化程序(blk_drv/hd.c 361 行)
-extern void floppy_init(void);  // 软驱初始化程序(blk_drv/floppy.c 2222 行)
+extern void floppy_init(void);  // 软驱初始化程序(blk_drv/floppy.c 524 行)
 extern void mem_init(long start,long end);  // 内存管理初始化(mm/memory.c 2222 行)
-extern long rd_init(long mem_start,long length);  // 虚拟盘初始化(blk_drv/ramdisk.c 2222 行)
+extern long rd_init(long mem_start,long length);  // 虚拟盘初始化(blk_drv/ramdisk.c 61 行)
 extern long kernel_mktime(struct tm* tm); // 建立内核时间(秒)
 extern long startup_time; // 内核启动时间(开机时间)(秒)
 
@@ -117,7 +117,7 @@ struct drive_info{char dummy[32];} drive_info;  // 用于存放硬盘参数表�
 void main(void){  // This really IS void,no error here. The startup routine assumes
                   // (well,...) this
                   // 这里确实是 void 没错。在 startup 程序(head.s)中就是这样假设的
-                  // 参见 head.s 程序第 2222 行开始的几行代码。
+                  // 参见 head.s 程序第 180 行开始的几行代码。
 /*
  * Interrupts are still disabled.Do necessary setups,then enable them.
  */
@@ -145,15 +145,15 @@ void main(void){  // This really IS void,no error here. The startup routine assu
 // 以下是内核进行所有初始化工作。阅读钱最好跟着调用的程序深入进去看，若实在看不下去了，就先放一放，
 // 继续看下一个初始化调用--这是经验之谈。
   mem_init(main_memory_start,memory_end);
-  trap_init();  // 陷阱门(中断向量)初始化。(kernel/traps.c 2222 行)
-  blk_dev_init(); // 块设备初始化(kernel/blk_drv/ll_rw_blk.c 22222 行)
-  chr_dev_init(); // 字符设备初始化(kernel/chr_dev/tty_io.c 2222 行)
-  tty_init(); // tty 初始化(kernel/chr_drv/tty_io.c 2222 行)
+  trap_init();  // 陷阱门(中断向量)初始化。(kernel/traps.c 159 行)
+  blk_dev_init(); // 块设备初始化(kernel/blk_drv/ll_rw_blk.c 168 行)
+  chr_dev_init(); // 字符设备初始化(kernel/chr_dev/tty_io.c 107 行)
+  tty_init(); // tty 初始化(kernel/chr_drv/tty_io.c 107 行)
   time_init();  // 设置开机启动时间-> startup_time (见 89 行)
-  sched_init(); // 调度程序初始化(加载了任务 0 的 tr ，ldtr )(kernel/sched.c 2222 行)
+  sched_init(); // 调度程序初始化(加载了任务 0 的 tr ，ldtr )(kernel/sched.c 403 行)
   buffer_init();  // 缓冲管理初始化，建内存链表等(fs/buffer.c 2222 行)
-  hd_init();  // 硬盘初始化(kernel/blk_drv/hd.c 2222 行)
-  floppy_init();  // 软驱初始化(kernel/blk_drv/floppy.c 22222 行)
+  hd_init();  // 硬盘初始化(kernel/blk_drv/hd.c 361 行)
+  floppy_init();  // 软驱初始化(kernel/blk_drv/floppy.c 524 行)
   sti();  // 所有初始化工作都完成了，开启中断
 // 下面过程通过在堆栈中设置的参数，利用中断返回指令启动第一个任务(task0)
   move_to_user_mode();  // 移到用户模式下运行(include/asm/system.h 第 1 行)
@@ -198,7 +198,7 @@ static char * envp[]={ "HOME=/usr/root",NULL};
 void init(void){
   int pid,i;
 // 读取硬盘参数包括分区表信息并建立虚拟盘和安装根文件系统设备。该函数是在 31 行上的宏定义的，
-// 对应函数是 sys_setup(),在 kernel/blk_drv/hd.c 2222 行
+// 对应函数是 sys_setup(),在 kernel/blk_drv/hd.c 74 行
   setup((void *) &drive_info);
   (void)open("/dev/tty0",O_RDWR,0); // 用读写访问方式打开设备 "dev/tty0",这里对应
                                     // 终端控制台。返回的句柄号 0 --stdin 标准输入设备
@@ -208,9 +208,19 @@ void init(void){
     // 打印缓冲区块数和总字节数，每块 1024 字节。
   printf("Free mem: %d bytes\n\r",memory_end - main_memory_start);  // 空闲内存字节数
 // 下面 fork() 用于创建一个子进程(子任务)。对于被创建的子进程，fork() 将返回 0 值，对于原(父进程)
-// 将返回子进程的进程号。所以 22222-22222 句是子进程执行的内容。该子进程关闭了句柄 0(stdin),
+// 将返回子进程的进程号。所以 215-219 句是子进程执行的内容。该子进程关闭了句柄 0(stdin),
 // 以只读方式打开 /etc/rv 文件，并执行 /bin/sh 程序，所带参数和环境变量分别由 argv_rc 和
 // envp_rc 数组给出。参见后面的描述。
+  if(!(pid=fork())){
+    close(0);
+    if (open("/etc/rc",O_RDONLY,0))
+      _exit(1); // 如果打开文件失败,则退出(/lib/_exit.c,2222)
+    execve("/bin/sh",argv_rc,envp_rc);  // 装入 /bin/sh 程序并执行
+    _exit(2); // 若 execve() 执行失败则退出(出错码 2,"文件或目录不存在")
+  }
+// 下面是父进程执行的语句.wait() 是等待子进程停止或终止,其返回值应是子进程的进程号(pid).
+// 这三句的作用是父进程等待子进程的结束. &i 是存放返回状态信息的位置.如果 wait() 返回值不等于
+// 子进程号,则继续等待.
   if(pid>0)
     while(pid!=wait(&i))
       ;// nothing
