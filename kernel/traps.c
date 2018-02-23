@@ -34,7 +34,7 @@ register unsigned short __res;\
 __asm__("mov %%fs,%%ax":"=a"(__res):);\
 __res;})
 // 以下定义了一些函数原形
-int de_exit(long code); // 程序退出处理 (kernel/exit.c 2222 行)
+int do_exit(long code); // 程序退出处理 (kernel/exit.c 102 行)
 
 void page_exception(void);  // 页异常，实际是 page_fault (mm/page.s 2222 行)
 // 以下定义了一些中断处理程序原形，代码在(kernel/asm.s 或 system_call.s)中
@@ -78,7 +78,7 @@ static void die(char * str,long esp_ptr,long nr){
   for(i=0;i<10;i++)
     printk("%02x",0xff&get_seg_byte(esp[1],(i+(char *)esp[0])));
   printk("\n\r");
-  de_exit(11);  // play segment exception.
+  do_exit(11);  // play segment exception.
 }
 // 以下这些以 do_ 开头的函数是对应名称中断处理程序调用的 C 函数。
 void do_double_fault(long esp,long error_code){
