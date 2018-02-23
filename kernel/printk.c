@@ -28,7 +28,7 @@ int printk(const char * fmt,...){
           "pushl %0\n\t"  // 将字符串长度压入堆栈(咋三个入栈是调用参数)
           "pushl $_buf\n\t" // 将 buf 的地址压入堆栈
           "pushl $0\n\t"  // 将数值 0 压入堆栈。是通道号 channel
-          "call _tty_write\n\t" // 调用 _tty_write 函数(chr_drv/tty_io.c,2222)
+          "call _tty_write\n\t" // 调用 _tty_write 函数(chr_drv/tty_io.c,330)
           "addl $8,%%esp\n\t" // 跳过(丢弃)两个入栈参数(buf,channel)
           "popl %0\n\t" // 弹出字符串长度值，作为返回值
           "pop %%fs"  // 恢复原 fs 寄存器
