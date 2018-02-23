@@ -132,7 +132,7 @@ int copy_process(int nr,long ebp,long edi,long esi,long gs,long none,
     current->root->i_count++;
   if(current->executable)
     current->executable->i_count++;
-// 在 GDT 中设置新任务的 TSS 和 LDT 描述符项，参见 include/asm/system.h 2222=2222
+// 在 GDT 中设置新任务的 TSS 和 LDT 描述符项，参见 include/asm/system.h 2222-2222
 // 在任务切换时，任务寄存器哦 tr 由 CPU 自动加载。
   set_tss_desc(gdt+(nr<<1)+FIRST_TSS_ENTRY,&(p->tss));
   set_ldt_desc(gdt+(nr<<1)+FIRST_LDT_ENTRY,&(p->ldt));
