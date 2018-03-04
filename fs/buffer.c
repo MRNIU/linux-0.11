@@ -253,4 +253,128 @@ repeat:
   return bh;
 }
 
-// 释放指定的缓冲区.等待
+// 释放指定的缓冲区.等待该缓冲区解锁.引用计数递减 1.唤醒等待空闲缓冲区的进程.
+void brelse(struct buffer_head * buf){
+  if(!buf)  return;
+  wait_on_buffer(buf);
+  if(!(buf->b_count--)) panic("Trying to free buffer");
+  wake_up(&buffer_wait;
+}
+
+// bread() reads a specified block and returns the buffer that contains it. It
+// returns NULL block was unreadable.
+// 从设备上读取指定的数据块并返回含有数据的缓冲区.如果指定的块不存在则返回 NULL.
+struct buffer_head * bread(int dev,int block){
+  struct buffer_head *bh;
+// 在高速缓冲区中申请一块缓冲区,如果返回值指针式 NULL 指针,表示内核出错,死机.
+  if(!(bh=getblk(dev,block))) panic("bread:getblk returned NULL\n");
+  if(bh->b_uptodate)  return bh;
+  ll_rw_block(READ,bh); // 否则调用 ll_rw_block(),产生读设备块请求.并等待缓冲区解锁.、
+  wait_on_buffer(bh);
+  if(bh->b_uptodate)  return bh;  // 如果该缓冲区已更新,则返回缓冲区头指针,退出
+  brelse(bh); // 否则表明读设备操作失败,释放该缓冲区,返回 NULL 指针,退出
+  return NULL;
+}
+
+// 复制内存块.从 from 地址复制一块数据到 to 位置.
+#define COPYBLK(from,to)\
+__asm__("cld\n\t"\
+        "rep\n\t"\
+        "movsl\n\t"
+        ::"c"(BLOCK_SIZE/4),"S"(from),"D"(to)\
+        :"cx","di","si")
+// bread_page reads four buffers into memory at the desired address.It's a function
+// of its own,as there is some speed to be got by reading them all at the same
+// time,not waiting for one to be read,and then another etc.
+// bread_page 一次读取四个缓冲块内容读到指定的地址.他是一个完整的函数,因为同时读取四块可以获得
+// 速度上的好处,不用等着读一块,再读一块了
+// 读设备上一个页面(4 个缓冲块)的内容到内存指定的地址
+void bread_page(unsigned long address,int dev,int b[4]){
+  struct buffer_head * bh[4];
+  int i;
+  for(i=0;i<4;i++)
+    if(b[i]){
+// 取高速缓冲中指定设备和块号的缓冲区,如果该缓冲区数据无效则产生读设备请求.
+      if(bh[i]=getblk(dev,b[i]))
+        if(!bh[i]->b_uptodate)
+          ll_rw_block(READ,bh[i]);
+    }else bh[i]=NULL;
+// 将 4 块缓冲区伤的内容顺序复制到指定地址处
+  for(i=0;i<4;i++,address+=BLOCK_SIZE)
+    if(bh[i]){
+      wait_on_buffer(bh[i]);  // 等待缓冲区解锁(如果已上锁的话)
+      if(bh[i]->b_uptodate) // 如果该缓冲区中有数据的话,则复制
+        COPYBLK((unsigned long)bh[i]->b_data,address);
+      brelse(bh[i]);  // 释放该缓冲区
+    }
+}
+
+// Ok,breada can be used as bread,but additionally to mrk other blocks for reading
+// as well.End the argument list with a negative number.
+// breada 可以像 bread 一样使用,但会另外预读一些模块.该函数参数列表需要使用一个负数来表明
+// 参数列表的结束
+// 从指定设备读取指定的一些块.成功时返回第 1 块的缓冲去头指针,否则返回 NULL
+struct buffer_head * breada(int dev,int first,...){
+  va_list args;
+  struct buffer_head *bh,*tmp;
+  va_start(args,first); // 取可变参数表中第 1 个参数(块号)
+// 取高速缓冲中指定设备和块号的缓冲区.如果缓冲区数据无效,则发出读设备数据块请求
+  if(!(bh=getblk(dev,first))) panic("bread:getblk returned NULL\n");
+  if(!bh->b_uptodate) ll_rw_block(READ,bh);
+// 然后顺序取可变参数表中其他预读块号,并作与上面同样处理,但不引用,注意, 330 行上又一个 bug.
+// 其中的 bh 应该是 tmp.这个 bug 直到 0.96 版的内核代码中才被纠正过来.这里已修改
+  while((first=va_arg(args,int))>=0){
+    tmp=getblk(dev,first);
+    if(tmp){
+      if(!tmp->b_uptodate)
+        ll_rw_block(READ,tmp);
+      tmp->b_count--;
+    }
+  }
+// 可变参数表中所有参数处理完毕.等待第 1 个缓冲区解锁(如果已被上锁)
+  va_end(args);
+  wait_on_buffer(bh);
+// 如果缓冲区中数据有效,则返回缓冲区头指针,退出.否则释放该缓冲区,返回 NULL,退出.
+  if(bh->b_uptodate)  return bh;
+  brelse(bh);
+  return NULL;
+}
+
+// 缓冲区初始化函数.参数 buffer_end 是指定的缓冲区内存的末端.若系统有 16 MB 内存,则缓冲区末端
+// 设置为 4 MB.若系统有 8 MB 内存,缓冲区末端设置为 2 MB
+void buffer_init(long buffer_end){
+  struct buffer_head * h=start_buffer;
+  void * b;
+  int i;
+// 如果缓冲区高端等于 1 MB,则由于从 640 KB~1 MB 被显示内存和 BIOS 占用,因此实际可用缓冲区内存
+// 高端应该是 640 KB.否则内存高端一定大于 1 MB.
+  if(buffer_end==1<<20) b=(void *)(640*1024);
+  else b=(void*)buffer_end;
+// 这段代码用于初始化缓冲区,简历空闲缓冲区环链表,并获取系统中缓冲块的数目.操作的过程是从缓冲区
+// 高端开始划分 1 KB 大小的缓冲块,与此同时在缓冲取低端简历描述该缓冲块的结构 buffer_head,并将这些
+// buffer_head 组成双向链表.h 是指向缓冲头结构的指针,而 h+1 是指向内存地址连续的下一个缓冲头地址,
+// 也可以说是指向 h 缓冲头的末端外.为了保证有足够长的内存来存储一个缓冲头结构,
+// 需要 b 所指向的内存块地址 >=h 缓冲头的末端,即需要 >=h+1
+  while((b-=BLOCK_SIZE)>=((void*)(h+1))){
+    h->b_dev=0; // 使用该缓冲区的设备号
+    h->b_dirt=0;  // 脏标志,也即缓冲区修改标志
+    h->b_count=0; // 该缓冲区引用计数
+    h->b_lock=0;  // 缓冲区锁定标志
+    h->b_uptodate=0;  // 缓冲区更新标志(或称数据有效标志)
+    h->b_wait=NULL; // 指向等待该缓冲区解锁的进程
+    h->b_next=NULL; // 指向具有相同 hash 值的下一个缓冲头
+    h->b_prev=NULL; // 指向具有相同 hash 值的前一个缓冲头
+    h->b_data=(char*)b; // 指向对应缓冲区块(1024 字节)
+    h->b_prev_free=h-1; // 指向链表中前一项
+    h->b_next_free=h+1; // 指向链表中下一项
+    h++;  // h 指向下一新缓冲头位置
+    NR_BUFFERS++; // 缓冲区块数累加
+    if(b==(void*)0x100000)  b=(void*)0xa0000; // 如果地址 b 递减到等于 1 MB,则跳过 384 KB,
+                                              // 让 b 指向地址 0xa0000(640 KB)处
+  }
+  h--;  // 让 h 指向最后一个有效缓冲头
+  free_list=start_buffer; // 让空闲链表头指向头一个缓冲区头
+  free_list->b_prev_free=h; // 链表头的 b_prev_free 指向前一项(即最后一项)
+  h->b_next_free=free_list; // h 的下一项指针指向第一项,形成一个环链
+  for(i=0;i<NR_HASH;i++)  hash_table[i]=NULL; // 初始化 hash 表(散列表),置表中所有的指针为 NULL
+}
