@@ -50,7 +50,7 @@
 
 
 ## 文件系统
-- [ ] buffer.c
+- [x] buffer.c
 - [ ] bitmap.c
 - [ ] inode.c
 - [ ] namei.c
