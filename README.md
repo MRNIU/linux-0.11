@@ -51,10 +51,11 @@
 
 ## 文件系统
 - [x] buffer.c
-- [ ] bitmap.c
-- [ ] inode.c
+- [x] bitmap.c
+- [x] inode.c
+- [x] super.c
 - [ ] namei.c
-- [ ] file_table.c
+- [x] file_table.c
 - [ ] block_dev.c
 - [ ] file_dev.c
 - [ ] pipe.c
