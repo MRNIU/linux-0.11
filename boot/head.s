@@ -34,11 +34,11 @@ startup_32:   # 14-28 行设置各个数据段寄存器
     mov %ax,%es       # reloaded in 'setup_gdt'
     mov %ax,%fs       # 因为修改了 gdt ，所以服药重新装载所有的段寄存器。
     mov %ax,%gs       # CS 代码段寄存器已经在 setup_gdt 中重新加载过了。
-    lss _stack_start
+    lss _stack_start,%esp
 # 41-45 行用于测试 A20 地址线是否已经开启。采用的方法是向内存地址 0x000000 处写入任意一个数值，
 # 然后看内存地址 0x100000(1 M) 处是否也是这个值。如果一直相同的话，就一直比较下去，即死循环、
 # 死机表示地址 A20 线没有想通，结果内核就不能使用 1 MB 以后是那个内存。
-  xorl $eax,$eax
+  xorl %eax,%eax
 1:incl %eax             # check that A20 really IS enabled
   movl %eax,0x00000000  # loop forever if it isn't
   cmpl %eax,0x100000
@@ -180,7 +180,7 @@ after_page_tables:
   pushl $L6 # return address for main,if it decides to.
   pushl $_main  # '_main' 是编译程序对 main 的内部表示方法
   jmp setup_paging  # 跳转至第 242 行。
-
+L6:
   jmp L6  # main should never return here,but just in case,we know what happens.
 
 /* This is the default interrupt "headler" :-) */   /* 下面是默认的中断“向量句柄” */
@@ -265,10 +265,10 @@ setup_paging: # 首先对 5 页内存(1 页  目录+ 4 页页表)清零。
   jge 1b  # 如果小于 0 则说明全填好了
 # 下面设置页目录基址寄存器 cr3 的值，指向页目录表
   xorl %eax,%eax  # pg_dir is at 0x0000 页目录表在 0x0000 处
-  movl %eax,$cr3  # cr3 - page directory start
+  movl %eax,%cr3  # cr3 - page directory start
   movl %cr0,%eax  # 设置启动使用分页标志(cr0 的 PG 标志，位 31)
   orl $0x80000000,%eax  # 添上 PG 标志
-  movl $eax,%cr0  # set paging (PG) bit
+  movl %eax,%cr0  # set paging (PG) bit
   ret # this also flushes prefetch-queue
 # 在改变分页处理标志后，要求使用转移指令刷新预取指令队列，这里用的是返回指令 ret。该返回指令的
 # 另一个作用是将堆栈中的 main 程序的地址弹出，并开始运行 /init/main.c 程序。本程序到此真正结束了
@@ -276,12 +276,12 @@ setup_paging: # 首先对 5 页内存(1 页  目录+ 4 页页表)清零。
 .word 0
 idt_descr:  # 下面两行是 lidt 指令的 6 B 操作数: 长度：基址
   .word 256 * 8-1 # idt contains 256 entries
-  .long_idt
+  .long _idt
 .align 2
 .word 0
 gdt_descr:  # 下面两行是 lgdt 指令的 6 B 操作数： 长度:基址
   .word 256*8-1 # so does gdt(not that that's any magic number,but it works for me :^)
-  .long_gdt
+  .long _gdt
 
   .align 3  # 按 8 字节方式对齐内存地址边界
 _idt:  .fill 256,8,0  # idt is uninitialized  256 项，每项 8 字节，填 0

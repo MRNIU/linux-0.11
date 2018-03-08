@@ -53,7 +53,7 @@ entry start    ! 告知连接程序，程序从 start 标号开始执行。
 start:
 ! 55-64 行作用是将自身 (bootsect) 从目前段 0x07c0 (31 KB) 移动到 0x9000 (576 KB) 处，
 ！共 256 字(512 字节) ，然后跳转到移动后代码的 go 标号处，即本程序的下一语句处。
-      mov ax,#BOOTSEG ！将 ds 段寄存器置为 0x7c0;
+      mov ax,#BOOTSEG ！将 ax 段寄存器置为 0x07c0;
       mov ds,ax
       mov ax,#INITSEG ! 将 es 段寄存器置为 0x9000;
       mov es,ax
@@ -61,8 +61,8 @@ start:
       mov si,si ！源地址  ds:si=0x07c0:0x0000
       mov di,di ! 目的地址 es:di=0x9000:0x0000
       rep ! 重复执行，直到 cx =0
-      movw  ！移动一个字
-      jmpo go,INITSEG ！段间跳转。这里 INITSEG 指出跳转到的段地址。
+      movw  ！ 将DS：SI的内容送至ES：DI，note! 是复制过去，原来的代码还在。
+      jmpi go,INITSEG ！段间跳转。这里 INITSEG 指出跳转到的段地址。
 ！从下面开始，CPU 执行已经移动到 0x9000 段处的代码。
 go:
       mov ax,cs
@@ -85,7 +85,7 @@ load_setup:
 ！dh=磁头号；dl=驱动器号(若是硬盘则需要置位 7)；es:bs-> 指向数据缓冲区。若出错则 CF 标志置位。
       mov dx,#0x0000  ! drive 0,head 0  驱动器 0 ，磁头 0;
       mov cx,#0x0002  ! sevtor 2,track 0  扇区 2 ，磁道 0;
-      mov bx,#0x200   ! address =512,in INITSEG  INITSEG 段 512 偏移处;
+      mov bx,#0x0200   ! address =512,in INITSEG  INITSEG 段 512 偏移处;
       mov ax,#0x0200+SETUPSEG ! service 2,nr of sectors 服务号 2 ，后面是扇区数;
       int 0x13        ! read it
       jnc ok_load_setup ! of - continue   若正常，则继续;
@@ -198,7 +198,7 @@ ok1_read:
       sub ax,sread    ！减去当前磁道已读扇区数
       mov cx,ax       ！cx=ax=当前磁道未读扇区数
       shl cx,#9       ！cx=cx*512 字节
-      add cx,,bx      ！cx=cx+段内偏移值(bx),即此次操作后段内读入字节数。
+      add cx,bx      ！cx=cx+段内偏移值(bx),即此次操作后段内读入字节数。
       jnc ok2_read    ！若没有超过 64 KB 字节，则跳转至 ok2_read 处执行
       je ok2_read
       xor ax,ax       ！若加上此次将读磁道上所有未读扇区时会超过 64 KB，
@@ -225,12 +225,12 @@ ok3_read:
       jnc rp_read
       mov ax,es
       add ax,#0x1000
-      moc es,ax
+      mov es,ax
       xor bx,bx
       jmp rp_read
 ! 读当前磁道上指定开始扇区和需读扇区的数据到 es:bx 开始处，参见第 81 行下对 BIOS 磁盘读中断 int 0x13，
 ！ah=2 的说明。(al - 需读扇区数;es:bx - 缓冲区开始位置)
-read_track;
+read_track:
       push ax
       push bx
       push cx
