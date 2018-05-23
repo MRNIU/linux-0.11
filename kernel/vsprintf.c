@@ -167,7 +167,7 @@ int vsprintf(char * buf,const char * fmt,va_list args){
 // 下面这段代码分析长度修饰符，并将其存入 qualifier 变量。(h,l,L 的含义参见列表后的说明)
     // get the conversion qualifier
     qualifier=-1;
-    if(*fnt=='h'||*fmt=='l'||*fmt=='L'){
+    if(*fmt=='h'||*fmt=='l'||*fmt=='L'){
       qualifier=*fmt;
       ++fmt;
     }
@@ -179,7 +179,7 @@ int vsprintf(char * buf,const char * fmt,va_list args){
         if(!(flags & LEFT))
           while(--field_width>0)
             *str++=' ';
-        *str++=(unsigned char) va_arg(arg,int);
+        *str++=(unsigned char) va_arg(args,int);
         while(--field_width>0)
           *str++=' ';
         break;

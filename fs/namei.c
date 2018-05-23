@@ -1,0 +1,431 @@
+//
+// Some correcting by tytso.
+// tytso 做了一些纠正
+
+#include <linux/sched.h>  // 调度程序头文件,定义任务结构 task_struct、初始任务 0 的数据
+#include <linux/kernel.h> // 内核头文件.含有一些内核常用函数的原形定义
+#include <linux/segment.h> // 段操作头文件。定义了有关段寄存器操作的嵌入式汇编函数。
+#include <linux/mm.h> // 内存管理头文件.含有一些内核常用函数的原形定义
+#include <asm/system.h> // 系统头文件.定义了设置或修改描述符/中断门等的嵌入式汇编宏
+
+#include <string.h> // 字符串头文件.主要定义了一些有关字符串操作的嵌入函数
+#include <fcntl.h> // 文件控制头文件。用于文件及其描述符的操作控制常数符号的定义。
+#include <error.h> // 错误号头文件。包含系统中各种出错号(Linus 从 MINIX 中引进的)。
+#include <const.h> // 常数符号头文件。目前仅定义了 i 节点中 i_mode 字段的各标志位。
+#include <sys/stat.h> // 文件状态头文件.含有文件或文件系统状态结构 stat{} 和常量.
+
+// 访问模式宏。x 是 include/fcntl.h 第 7 行开始定义的文件访问标志。
+// 根据 x 值索引对应数值(数值表示 rwx 权限：r，w，rw，wxrwxrwx)(数值是 8 进制)。
+#define ACC_MODE(x) ("\004\002\006\377"[(x)&O+ACCMODE])
+
+// comment out this line if you want names > NAME_LEN chars to be truncated.
+// Else they will be disallowed.
+// 如果想让文件名长度 > NAME_LEN 的字符被截掉，就将下面定义注释掉
+//#define NO_TRUNCATE
+
+#define MAY_EXEC 1  // 可执行(可进入)
+#define MAY_WRITE 2 // 可写
+#define MAY_READ 4 // 可读
+
+
+// permission()
+// is ueed to check for read/write/execute permissions on a file.
+// I don't know if we should look at just the euid or both euid and uid,
+// but that should be easily changed.
+// permission()
+// 该函数用于检测一个文件的读/写/执行权限。我不知道是否只需检查 euid，还是需要检查 euid 和
+// uid 两者，不过这很容易修改。
+
+// 检测文件访问许可权限
+// 参数：inode-文件对应的 i 节点；mask-访问属性屏蔽码。返回：访问许可返回 1，否则返回 0.
+static int permission(struct m_inode * inode, int mask){
+  int mode=inode->i_mode; // 文件访问属性
+// 特殊情况：即使是超级用户(root)也不能读/写一个已被删除的文件
+// special case: not even root can read/write a deleted file.
+  // 如果 i 节点有对应的设备，但该 i 节点的连接数等于 0，则返回。
+  if(inode->i_dev && ! inode->i_nlinks)
+    return 0;
+  // 否则，如果进程的有效用户 id(euid) 与 i 节点的用户 id 相同，则取文件宿主的用户访问权限
+  else if(current->euid==inode->i_uid)
+    mode>>=6;
+  // 否则，如果进程的有效组 id(egid) 与 i 节点的组 id 相同，则取组用户的访问权限
+  else if(current->egid==inode->i_gid)
+    mode>>=3;
+  // 如果上面所取得的访问权限与屏蔽码相同，或者是超级用户，则返回 1，否则返回 0
+  if(((mode & masl & 0007)==mask)||suser())
+    return 1;
+  return 0;
+}
+
+// ok, we cannot use strncmp, as the name is not in our data space.
+// Thus we'll have to use match. No big problem. Match also makes some sanity tests.
+// NOTE! unlike srtncmp, match returns 1 for success, 0 for failure.
+// 我们不能使用 srtncmp 字符串比较函数，因为名称不再我们的数据空间(不在内核空间)。
+// 因为我们只能使用 match()。 问题不大。match() 同样也处理一些完整的测试。
+// 注意！与 strncmp 不同的是 match() 成功时返回 1，失败时返回 0
+
+// 指定长度字符串比较函数。参数：len-比较字符串的长度；name-文件名指针；de-目录项结构
+// 返回：相同返回 1，不同返回 0
+static int match(int len, const char * name, struct dir_entry * de){
+  register int same __asm__("ax");
+  // 如果目录项指针空，过着目录项 i 节点等于 0，或者要比较的字符串长度超过文件名长度，则返回 0
+  if(!de||!de->inode||len>NAME_LEN)
+    return 0;
+  // 如果要比较的长度 len 小于 NAME_LEN, 但是目录项中文件名长度超过文件名长度，则返回 0
+  if(len<NAME_LEN&&de->name[len])
+    return 0;
+  // 下面嵌入汇编语句，在用户数据空间(fs)执行字符串的比较操作。
+  // %0-eax(比较结果 same)；
+  // %1-eax(eax 初值 0)；
+  // %2-esi(名字指针)；
+  // %3-edi(目录项名指针)；
+  // %4-ecx(比较的字节长度值 len)
+  __asm__("cld\n\t" // 清方向位
+          "fs;repe;cmpsb\n\t" // 用户空间执行循环比较 [esi++] 和 [edi++] 操作
+        "setz %%al" // 若比较结果一样(z=0)则设置 al=1(same=eax)
+          :"=a"(same)
+          :""(0),"S"((long)name),"D"((long)de->name),"c"(len)
+          :"cx","di","si");
+  return same;  // 返回比较结果
+}
+
+// find_entry()
+// finds an entry in the specified directory with the wanted name. It returns
+// the cache buffer in which the entry was found, and the entry itself
+// (as a parameter-res_dir). It does NOT read the inode of the entry-you'll
+// have to do that yourself if you want to.
+// This also takes care of the few special cases due to '..'-traversal over
+// a pseudo-root and a mount point.
+//
+// find_entry()
+// 在指定的目录中寻找一个与名字匹配的目录项。返回一个含有找到目录项的高速缓冲区以及目录项本身
+// (作为一个参数 -res_dir)。并不读目录项的 i 节点，如果需要的话需自己操作。
+// ".." 目录项，操作期间也会对几种特殊情况分别处理，例如横越一个伪根目录以及安装点
+//
+// 查找指定目录和文件名的目录项。
+// 参数：dir-指定目录 i 节点的指针；name-文件名；namelen-文件名长度；
+// 返回：高速缓冲区指针；res_dir-返回的目录项结构指针
+static struct buffer_head * find_entry(struct m_inode ** dir, const char * name,
+              int namelen, struct dir_entry ** res_dir){
+  int entries;
+  int bolock,i;
+  struct buffer_head * bh;
+  struct dir_entry * de;
+  struct super_block * sb;
+// 如果定义了 NO_TRUNCATE，则若头文件名长度超过最大长度 NAME_LEN，则返回
+#ifdef NO_TRUNCATE
+  if(namelen>NAME_LEN)
+    return NULL;
+#else // 如果没有定义 NO_TRUNCATE，则若文件名长度超过最大长度 NAME_LEN，则截短之
+  if(namelen>NAME_LEN)
+    namelen=NAME_LEN;
+#endif
+// 计算本目录中目录项项数 entries。置空返回目录项结构指针。
+  entries=(*dir)->i_size/(sizeof(struct dir_entry));
+  *res_dir=NULL;
+  if(!namelen)  // 如果文件名长度等于 0，则退出
+    return NULL;
+// check for '..', as we might have to do some "magic" for it
+// 检查目录项 '..'，因为可能需要对其特别处理
+  if(namelen==2&&get_fs_byte(name)=='.'&&get_fs_byte(name+1)=='.'){
+  // '..' in a pseudo-root results in a faked '.' (just change namelen)
+  // 伪根中的 '..' 如同一个假 '.' (只需改变名字长度)
+  if((*dir)==current->root)
+    namelen=1;
+    // 否则若该目录 i 节点号等于 ROOT_INO(1) 的话，说明是文件系统根节点。则取文件系统的
+    // 超级块.
+    else if((*dir)->i_num==ROOT_INO){
+      // '..' over a mount-point results in 'dir' being exchanged for the mounted
+      // directory-inode. NOTE! We set mounted, so that we can iput the new dir.
+      // 在一个安装点上的 '..' 将导致目录交换到安装到文件系统的目录 i 节点。
+      // 注意！由于设置了 mounted 标志，因而我们能够取出该新目录。
+      sb=get_super((*dir)->i_dev);
+      // 如果被安装到的 i 节点存在，则先释放原 i 节点，然后对被安装到的 i 节点进行处理。
+      // 让 *dir 指向该被安装到的 i 节点；该 i 节点的引用数加 1
+      if(sb->s_imount){
+        iput(*dir);
+        (*dir)=sb->s_imount;
+        (*dir)->i_count++;
+      }
+    }
+  }
+  // 如果该 i 节点指向的第一个直接磁盘块号为 0，则返回 NULL，退出
+  if(!(block=(*dir)->i_zone[0]))
+    return NULL;
+  // 从节点所在设备读取指定的目录项数据块，如果不成功，则返回 NULL，退出
+  if(!(bh=bread((*dir)->i_dev,block)))
+    return NULL;
+  // 在目录项数据块中搜索匹配指定文件名的目录项，首先让 de 指向数据块，并在不超过目录中目录项
+  // 数的条件下，循环执行搜索。
+  i=0;
+  de=(struct dir_entry *) bh->b_data;
+  while(i<entries){
+    // 如果当前目录项数据块已经搜索完，还没有找到匹配的目录项，则释放当前目录项数据块。
+    if((char*)de>=BLOCK_SIZE+bh->b_data){
+      brelse(bh);
+      bh=NULL;
+      // 再读入下一目录项数据块。若这块为空，则只要还没有搜索完目录中的所有目录项，就跳过该块，
+      // 继续读入下一目录项数据块。若该块不为空，就让 de 指向该目录项数据块，继续搜索
+      if(!(block=bmap(*dir,i/DIR_ENTRIES_PER_BLOCK))||!(bh=bread((*dir)->i_dev,block))){
+        i+=DIR_ENTRIES_PER_BLOCK;
+        continue;
+      }
+      de=(struct dir_entry *)bh->b_data;
+    }
+    // 如果找到匹配的目录项的话，则返回该目录项结构指针和该目录项数据块指针，退出。
+    if(match(namelen, name, de)){
+      *res_dir=de;
+      return bh;
+    }
+    de++; // 否则继续在目录项数据块中比较下一个目录项
+    i++;
+  }
+  // 若指定目录中的所有目录项都搜索完还没有找到相应的目录项，则是放目录项数据块，返回 NULL。
+  brelse(bh);
+  return NULL;
+}
+
+// add_entrty()
+// adds a file entry to the specified directory, using the same semantics as
+// find_entry(). It returns NULL if it failed.
+//
+// NOTE!! The inode part of 'de' is left at 0-which means you may not sleep
+// between calling this and putting something into the entry, as someone else
+// might have used it while you slept.
+//
+// add_entrty()
+// 使用与 find_entry() 同样的方法，往指定目录中添加一文件目录项，如果失败则返回 NULL。
+// 注意！！ 'de' (指定目录项结构指针)的 i 节点部分被设置为 0-这表示在调用该函数和往目录项中
+// 添加信息之间不能睡眠，因为若睡眠那么其它人(进程)可能会已经使用了该目录项。
+//
+// 根据指定的目录和文件名添加目录项。
+// 参数：dir-指定目录的 i 节点；name-文件名；namelen-文件名长度；
+// 返回：高速缓冲区指针；res_dir-返回的目录项结构指针；
+static struct buffer_head * add_entrty(struct m_inode * dir, const char * name,
+                int namelen, struct dir_entry ** res_d){
+  int block,i;
+  struct buffer_head * bh;
+  struct dir_entry * de;
+
+  *res_dir=NULL;
+  // 如果定义了 NO_TRUNCATE，则若文件名长度超过最大长度 NAME_LEN，则返回
+#ifdef NO_TRUNCATE
+  if(namelen>NAME_LEN)
+    return NULL;
+#else
+  if(namelen>NAME_LEN)
+    return NAME_LEN;
+#endif
+  if(!namelen)
+    return NULL;
+  // 如果该目录 i 节点所指向的第一个直接磁盘块号为 0，则返回 NULL 退出
+  if(!(block=dir->i_zone[0]))
+    return NULL;
+  if(!(bh=bread(dir->i_dev, block)))  // 如果读取该磁盘块失败，则返回 NULL 并退出
+    return NULL;
+  // 在目录项数据块中循环查找最后未使用的目录项。首先让目录结构指针 de 指向高速缓冲的数据块开始处，
+  // 即第一个目录项。
+  i=0;
+  de=(struct dir_entry *)bh->b_data;
+  while(1){
+    // 如果当前判别的目录项已经超出当前数据块，则释放该数据块，重新申请一块磁盘块 block。如果
+    // 申请失败，则返回 NULL 退出。
+    if((char *)de>=BLOCK_SIZE+bh-b_data){
+      brelse(bh);
+      bh=NULL;
+      block=create_block(dir,i/DIR_ENTRIES_PER_BLOCK);
+      if(!block)
+        return NULL;
+      if(!(bh=bread(dir->i_dev, block))){
+        i+=DIR_ENTRIES_PER_BLOCK;
+        continue;
+      }
+      // 否则，让目录项结构指针 de 指向该块的高速缓冲数据块开始处。
+      de=(struct dir_entry *) bh->b_data;
+    }
+    // 如果当前所操作的目录项序号 i* 目录结构大小已经超过了该目录所指出的大小 i_size，则说明
+    // 该第 i 个目录项还未使用，我们可以使用它。于是对该目录项进行设置(置该目录项的 i 节点指针为空)。
+    // 并更新该目录的长度值(加上一个目录项的长度，设置目录的 i 节点已修改标志，再更新该目录的
+    // 改变时间为当前时间)。
+    if(i*sizeof(struct dir_entry)>=dir->i_size){
+      de->inode=0;
+      dir->i_size=(i+1)*sizeof(struct dir_entry);
+      dir->i_dirt=1;
+      dir->i_ctime=CURRENT_TIME;
+    }
+    // 若该目录项的 i 节点为空，则表示找到一个还未使用的目录项。于是更新目录的修改时间为当前时间。
+    // 并从用户数据区复制文件名到该目录项的文件名字段，置相应的高速缓冲块为已修改标志。返回该目录
+    // 项的指针以及该高速缓冲区的指针，退出。
+    if(!de->inode){
+      dir->i_mtime=CURRENT_TIME;
+      for(i=0;i<NAME_LEN;i++)
+        de->name[i]=(i<namelen)?get_fs_byte(name+i):0;
+      bh->b_dirt=1;
+      *res_dir=de;
+      return bh;
+    }
+    de++; // 如果该目录项已被使用，则继续检测下一个目录项
+    i++;
+  }
+  // 执行不到这里，也许 Linus 在写这段代码时是先复制了上面 find_entry() 的代码，而后修改的
+  brelse(bh);
+  return NULL;
+}
+
+// get_dir()
+//
+// Getdir traverses the pathname util it hits the  topmost directory.
+// It returns NULL on failure.
+//
+// get_dir()
+// 该函数根据给出的路径名进行搜索，直到达到最顶端的目录。如果失败则返沪 NULL
+
+// 搜寻指定路径名的目录。参数：pathname-路径名
+// 返回：目录的 i 节点指针。失败时返回 NULL.
+static struct m_inode *get_dir(const char * pathname){
+  char c;
+  const char * thisname;
+  struct m_inode * inode;
+  struct buffer_head * bh;
+  int namelen, inr, idev;
+  struct dir_entry * de;
+  // 如果进程没有设定根 i 节点，或者该进程根 i 节点的引用为 0，则系统出错，死机。
+  if(!current->root||!current->root->i_count)
+    panic("No cwd inode");
+  // 如果用户指定的路径名的第一个字符是 '/'，则说明路径名是绝对路径名。则从根 i 节点开始操作。
+  if((c=get_fs_byte(pathname))=='/'){
+    inode=current->root;
+    pathname++;
+  }
+  // 否则若第一个字符是其他字符，则表示给定的是相对路径名。应从进程的当前工作目录开始操作。
+  // 则取进程当前工作目录的 i 节点
+  else if(c)
+    inode=current->pwd;
+  else  // 否则表示路径名为空，出错。返回 NULL，退出
+    return NULL;  // * empty name is bad 空的路径名是错误的
+  inode->i_count++; // 将取得的 i 节点引用计数增 1
+  while(1){
+    // 若该 i 节点不是目录节点，或者没有可进入的访问许可，则释放该 i 节点，返回 NULL，退出
+    thisname=pathname;
+    if(!S_ISDIR(inode->i_mode)||!permission(inode, MAY_EXEC)){
+      iput(inode);
+      return NULL;
+    }
+    // 从路径名开始起搜索检测字符，直到字符已是结尾符(NULL)或者是 '/'，此时 namelen 正好是
+    // 当前处理目录名的长度。如果最后也是一个目录名，但其后没有加 '/'，则不会返回该最后目录的
+    // i 节点！
+    // 比如： /var/log/httpd，将只返回 log/ 目录的 i 节点
+    for(namelen=0;(c=get_fs_byte(pathname++))&&(c!='/');namelen++)
+      // nothing
+      ;
+    // 若字符是结尾符 NULL，则表明已经到达指定目录，则返回该 i 节点指针，退出
+    if(!c)
+      return inode;
+    // 调用查找指定目录和文件名的目录项函数，在当前处理目录中寻找子目录项。如果没有找到，则释放
+    // 该 i 节点，并返回 NULL，退出
+    if(!(bh=find_entry(&inode, thisname, namelen, &de))){
+      iput(inode);
+      return NULL;
+    }
+    // 取该子目录项的 i 节点号 inr 和设备号 idev，释放包含该目录项的钙素缓冲块和该 i 节点
+    inr=de->inode;
+    idev=inode->i_dev;
+    brelse(bh);
+    iput(inode);
+    // 取节点号 inr 的 i 节点信息，若失败，则返回 NULL，退出。否则继续以该子目录的 i 节点进行操作。
+    if(!(inode=iget(idev, inr)))
+      return NULL;
+  }
+}
+
+// dir_namei()
+//
+// dir_namei() returns the inode of the directory of the specified name, and the
+// name within that directory.
+//
+// dir_namei()
+// dir_namei() 函数返回指定目录名的 i 节点指针，以及在最顶层目录的名称。
+// 参数：pathname-目录路径名；namelen-路径名长度
+// 返回：指定目录名最顶层目录的 i 节点指针和最顶层目录名及其长度
+static struct m_inode * dir_namei(const char * pathname, int * namelen, const char ** name){
+  char c;
+  const char * basename;
+  struct m_inode *dir;
+  // 取指定路径名最顶层目录的 i 节点，若出错则返回 NULL，退出
+  if(!(dir=get_dir(pathname)))
+    return NULL;
+  // 对路径名 pathname 进行搜索检测，查找最后一个 '/' 后面的名字字符串，计算其长度，
+  // 并返回最顶层目录的 i 节点指针。
+  basename=pathname;
+  while(c=get_fs_byte(pathname++))
+    if(c=='/')
+      basename=pathname;
+  *namelen=pathname-basename-1;
+  *namelen=basename;
+  return dir;
+}
+
+// namei()
+//
+// is used by simple commamds to get the inode of a specified name.
+// Open, link etc use their own routines, but this is enough for things like 'chmod'
+// etc.
+//
+// namei()
+// 该函数被许多简单的命令用于取得指定路径名称的 i 节点。open、link 等则使用它们自己的相应函数，
+// 但对于像修改模式 'chmod' 等这样的命令，该函数已足够用了。
+//
+// 取指定路径名的 i 节点。参互：pathname-路径名。返回：对应的 i 节点
+struct m_inode * namei(const char * pathname){
+  const char * basename;
+  int inr, dev,namelen;
+  struct m_inode * dir;
+  struct buffer_head * bh;
+  struct dir_entry * de;
+  // 首先查找指定路径的最顶层目录的目录名及其 i 节点，若不存在，则返回 NULL，退出。
+  if(!(dir=dir_namei(pathname, &namelen, &basename)))
+    return NULL;
+  // 如果返回的最顶层名字的长度是 0，则表示该路径名以一个目录名为最后一项
+  if(!namelen)  // special case: '/usr/' etc.
+    return dir; // 对应于 '/usr/' 等情况
+  // 在返回的顶层目录中寻找指定文件名的目录项的 i 节点。因为如果最后也是一个目录名，但其后
+  // 没有加 '/'，则不会返回该最后目录的 i 节点！比如：/var/log/httpd, 将只返回 log/ 目录的
+  // i 节点。因为 die_namei() 将不以 '/' 结束的最后一个名字当作一个文件名来看待。因此这里需要
+  // 单独对这种情况使用寻找目录项 i 节点函数 find_entry() 进行处理.
+  bh=find_entry(&dir, basename, namelen, &de);
+  if(!bh){
+    iput(dir);
+    return NULL;
+  }
+  // 取该目录项的 i 节点号和目录的设备号，并释放包含该目录项的高速缓冲区以及目录 i 节点。
+  inr=de->inode;
+  dev=dir->i_dev;
+  brelse(bh);
+  iput(dir);
+  // 取对应节号的 i 节点，修改其访问时间为当前时间，并置已修改标志。最后返回该 i 节点指针。
+  dir=iget(dev, inr);
+  if(dir){
+    dir->i_atime=CURRENT_TIME;
+    dir->i_dirt=1;
+  }
+  return dir;
+}
+
+// open_namei()
+//
+// namei for open-this is in fact almost the whole open-routine.
+//
+// open_namei()
+// open() 所使用的 namei 函数-这其实是几乎完整的打开文件程序。
+//
+// 文件打开 namei 函数
+// 参数：pathname-文件路径名；flag-文件打开标志；mode-文件访问属性；
+// 返回：成功返回 0，否则返回出错码；res_inode-返回的对应文件路径名的 i 节点指针。
+int open_namei(const char * pathname, int flag, int mode, struct m_inode ** res_inode){
+  const char * basename;
+  int inr, dev, namelen;
+  struct m_inode * dir, * inode;
+  struct buffer_head * bh;
+  struct dir_entry * de;
+  // 如果文件访问许可模式是只读(0)，
+}
