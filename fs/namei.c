@@ -596,4 +596,84 @@ int sys_mkdir(const char * pathname, int mode){
   // 如果找不到对应路径名目录的 i 节点，则返回出错码
   if(!(dir=dir_namei(pathname, &namlen, &basename)))
     return -ENOENT;
+  // 如果最顶端的文件名长度为 0，则说明给出的路径名最后没有指定文件名，释放该目录 i 节点，返回出错码，
+  // 退出
+  if(!namelen){
+    iput(dir);
+    return -ENOENT;
+  }
+  // 如果在该目录中没有写的权限，则释放该目录的 i 节点，返回访问许可出错码，退出
+  if(!permission(dir, MAY_WRITE)){
+    iput(dir);
+    return -EPERM;
+  }
+  // 如果对应历经名上最后的文件名的目录项已经存在，则释放包含该目录项的高速缓冲区，释放目录的 i
+  // 节点，返回文件已经存在出错码，退出
+  bh=find_entry(&dir, basename, namelen, &de);
+  if(bh){
+    brelse(bh);
+    iput(dir);
+    return -EEXIST;
+  }
+  // 申请一个新的 i 节点，如果不成功，则释放目录的 i 节点，返回我空间出错码，退出
+  inode=new_inode(dir->i_dev);
+  if(!inode){
+    iput(dir);
+    return -ENOSPC;
+  }
+  // 置该新 i 节点对应的文件长度为 32(一个目录项的大小)，直接点已修改标志，以及节点的修改时间
+  // 和访问时间。
+  inode->i_size=32;
+  inode->i_dirt=1;
+  inode->i_mtime=inode->i_atime=CURRENT_TIME;
+  // 为该 i 节点申请一块磁盘，并令节点第一个直接块指针等于该块号。如果申请是失败，则释放对应
+  // 目录的 i 节点；复位新申请的 i 节点连接计数；释放该新的 i 节点，返回没有空间出错码，退出
+  if(!(inode->i_zone[0]=new_block(inode->i_dev))){
+    iput(dir);
+    inode->i_nlinks--;
+    iput(inode);
+    return -ENOSPC;
+  }
+  // 置该新的 i 节点已修改标志。读新申请的磁盘块。若出错，则释放对应目录的 i 节点；释放申请的磁盘块；
+  // 复位新申请的 i 节点连接技术；释放该新申请的 i 节点，返回没有空间出错码，退出
+  inode->i_dirt=1;
+  if(!(dir_block=bread(inode->i_dev, inode->i_zone[0]))){
+    iput(dir);
+    free_block(inode->i_dev, inode->i_zone[0]);
+    inode->i_nlinks--;
+    iput(inode);
+    return -ERROR;
+  }
+  // 令 de 指向目录项数据块，置该目录项的 i 节点号字段等于新申请的 i 节点号，名字字段等于 "."
+  de=(struct dir_entry *)dir_block->b_data;
+  de->inode=inode->i_num;
+  srtcpy(de->name, ".");
+  inode->i_nlinks=2;
+  // 然后设置该高速缓冲区已修改标志，并释放该缓冲区
+  dir_block->b_dirt=1;
+  brelse(dir_block);
+  // 初始化设置新 i 节点的模式字段，并置该 i 节点已修改标志
+  inode->i_mode=I_DIRECTORY|(mode&0777&~current->umask);
+  inode->i_dirt=1;
+  // 在目录中新添加一个目录项，如果失败(包含该目录项的高速缓冲区指针为 NULL)，则释放该目录的 i
+  //节点；所申请的 i 节点引用连接计数复位，并释放该 i 节点。返回出错码，退出。
+  bh=add_entrty(dir, basename, namelen, &de);
+  if(!bh){
+    iput(dir);
+    free_block(inode->i_dev, inode->i_zone[0]);
+    inode->i_nlinks=0;
+    iput(inode);
+    return -ENOSPC;
+  }
+  // 令该目录项的 i 节点字段等于新 i 节点号，置高速缓冲区已修改标志，释放目录和新的 i 节点，
+  // 释放高速缓冲区，最后返回 0(成功)
+  de->inode=inode->i_num;
+  bh->b_dirt=1;
+  dir->i_nlinks++;
+  dir->i_dirt=1;
+  iput(dir);
+  iput(inode);
+  brelse(bh);
+  return 0;
+
 }
