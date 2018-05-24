@@ -675,5 +675,65 @@ int sys_mkdir(const char * pathname, int mode){
   iput(inode);
   brelse(bh);
   return 0;
-
 }
+
+// routine to check that the specified directory is empty (for mkdir)
+// 用于检查指定的目录是否为空的子程序(用于 rmdir 系统调用函数)
+// 检查指定目录是不是空的。
+// 参数：inode-指定目录的 i 节点指针。
+// 返回：1-空的；0-不空
+static int empty_dir(struct m_inode * inode){
+  int nr,block;
+  int len;
+  struct buffer_head * bh;
+  struct dir_entry * de;
+  // 计算指定目录中现有目录项的个数(应该起码由两个，即 '.' 和 '..' 连个鬼文件目录项)
+  len=inode->i_size/sizeof(struct dir_entry);
+  // 如果目录项个数少于 2 个或者该目录 i 节点的第 1 个直接块没有指向任何磁盘块号，或者相应
+  // 磁盘块渡部叔，则显示警告信息 "设备 dev 上目录错"，返回 0(失败)。
+  if(len<2||!inode->i_zone[0]||!(bh=bread(inode->i_dev, inode->i_zone[0]))){
+    printk("warning-bad directory on dev %04x\n", inode->i_dev);
+    return 0;
+  }
+  // 让 de 指向含有读出磁盘块数据的高速缓冲区第 1 项目录项
+  de=(struct dir_entry *)bh->b_data;
+  // 如果第 1 个目录项的 i 节点号字段值不等于该目录的 i 节点号，或者第 2 个目录项的 i 节点号
+  // 字段为零，或者两个目录项的名字字段不分别等于 "." 和 ".."，则显示警告信息 "设备 dev 上目录错"
+  // 并返回 0
+  if(de[0].inode!=inode->i_num||!de[1].inode||strcmp(".", de[0].name)||strcmp("..", de[1].name)){
+    printk("warning-bad directory on dev %04\n", inode->i_dev);
+    return 0;
+  }
+  nr=2; // 令 nr 等于目录项序号；de指向第三个目录项
+  de+=2;
+  // 循环检测该目录中所有的目录项(len-2 个)，看有没有目录项的 i 节点号字段不为 0(被使用)
+  while(ne<len){
+    // 如果该快磁盘块中的目录项已经检测完，则释放该磁盘块的高速缓冲区，读取下一块含有目录项的
+    // 磁盘块。若相应块没有使用(货已经不用，如文件已经删除等)，则继续读下一块，若读不出，则出错，
+    // 返回 0. 否则让 de 指向读出块的第一个目录项。
+    if((void *) de>=(void *)(bh->b_data+BLOCK_SIZE)){
+      brelse(bh);
+      block=bmap(inode, nr/DIR_ENTRIES_PER_BLOCK);
+      if(!block){
+        nr+=DIR_ENTRIES_PER_BLOCK;
+        continue;
+      }
+      if(!(bh=bread(inode->i_dev, block)))
+        return 0;
+      de=(struct dir_entry *) bh->b_data;
+    }
+    // 如果该目录项的 i 节点号字段不等于 0，则表示该目录项目前正被使用，则释放该高速缓冲区，
+    // 返回 0，退出
+    if(de->inode){
+      brelse(bh);
+      return 0;
+    }
+    de++; // 否则，若还没有查询完该目录中的所有目录项，则继续检测
+    nr++;
+  }
+  // 到这里说明该目录中没有找到已用的目录项(当然除了头两个以外)，则释放缓冲区，返回 1
+  brelse(bh);
+  return 1;
+}
+
+//
