@@ -58,7 +58,7 @@ Based on Linux kernel 0.11 , and I also made some changes with 0.12.
 - [x] bitmap.c
 - [x] inode.c
 - [x] super.c
-- [ ] namei.c
+- [x] namei.c
 - [x] file_table.c
 - [ ] block_dev.c
 - [ ] file_dev.c
