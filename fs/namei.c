@@ -736,4 +736,107 @@ static int empty_dir(struct m_inode * inode){
   return 1;
 }
 
+// 系统调用函数-删除指定名称的目录
+// 参数：name-目录名(路径名)
+// 返回：返回 0 表示成功，否则返回出错号
+int sys_rmdir(const char * name){
+  const chat * basename;
+  int namelen;
+  struct m_inode * dir, * inode;
+  struct buffer_head * bh;
+  struct dir_entry * de;
+  // 如果不是超级用户，则返回访问许可出错码
+  if(!suser())
+    return -EPERM;
+  // 如果找不到对应路径名的 i 节点，则返回出错码
+  if(!(dir=dir_namei(name, &namelen, &basename)))
+    return -ENOENT;
+  // 如果最顶端的文件名长度为 0，则说明给出的路径名最后没有指定文件名，释放该目录 i 节点，返回
+  // 出错码，退出
+  if(!namelen){
+    iput(dir);
+    return -ENOENT;
+  }
+  // 如果在该目录中没有写的权限，则释放该目录的 i 节点，返回访问许可出错码，退出
+  if(!permission(dir, MAY_WRITE)){
+    iput(dir);
+    return -EPERM;
+  }
+  // 如果对应路径名上最后的文件名的目录项不存在，则释放包含该目录项的高速缓冲区，释放目录的 i 节点，
+  // 返回文件已经存在出错码，退出。否则 dir 是包含要被删除目录名的目录 i 节点，de 是要被删除的
+  // 目录的目录项结构
+  bh=find_entry(&dir, basename, namelen, &de);
+  if(!bh){
+    iput(dir);
+    return -ENOENT;
+  }
+  // 取该目录项指明的 i 节点。若出错则释放目录 i 节点，并释放含有目录项的高速缓冲，返回出错号
+  if(!(inode=iget(dir->i_dev, de->inode))){
+    iput(dir);
+    brelse(bh);
+    return -EPERM;
+  }
+  // 若该目录设置了受限删除标志并且进程的有效用户 id 不等于该 i 节点用户 id，则表示没有权限删除
+  // 该目录，则释放包含要删除目录名的目录 i 节点和该要删除目录的 i 节点，释放高速缓冲，返回出错码
+  if((dir->i_mode&S_ISVTX)&&current->euid&&inode->i_uid!=current->euid){
+    iput(dir);
+    iput(inode);
+    brelse(bh);
+    return -EPERM;
+  }
+  // 如果要被删除的目录项的 i 节点的设备号不等于包含该目录项的目录的设备号，或者该被删除目录的
+  // 引用连接计数大于 1(表示有符号连接等)，则不能删除该目录，于是释放包含要删除目录名的目录 i 节点
+  // 和该要删除目录的 i 节点，释放高速缓冲区，返回出错码
+  if(iode->i_dev!=dir->i_dev||inode->i_count>1){
+    iput(dir);
+    iput(inode);
+    brelse(bh);
+    return -EPERM;
+  }
+  // 若要被删除的目录项 i 节点号等与包含该需要删除目录的 i 节点号，则表示试图删除 "." 目录。
+  // 于是释放包含要删除目录名的目录 i 节点和该要删除目录的 i 节点，释放高速缓冲区，返回出错码
+  if(inode==dir){ // we may not delete ".", but "../dir" is ok
+    iput(inode);  // 我们不可以删除 "."，但可以删除 "../dir"
+    iput(dir);
+    brelse(bh);
+    return -EPERM;
+  }
+  // 若要被删除的目录的 i 节点的属性表明这不是一个目录，则释放包含要删除目录名的目录 i 节点和
+  // 该要删除目录的 i 节点，释放高速缓冲区，返回出错码
+  if(!S_ISDIR(inode->i_mode)){
+    iput(inode);
+    iput(dir);
+    brelse(bh);
+    return -ENOTDIR;
+  }
+  // 若该需被删除的目录不空，则释放包含要删除目录名的目录 i 节点和该要删除目录的 i 节点，释放
+  // 高速缓冲区，返回出错码
+  if(!empty_dir(inode)){
+    iput(inode);
+    iput(dir);
+    brelse(bh);
+    return -ENOTEMPTY;
+  }
+  // 若该需被删除目录的 i 节点的连接数不等于 2，则显示警告信息
+  if(inode->i_nlinks!=2)
+    printk("empty directory has nlink! =2(%d)",inode->i_nlinks);
+  // 置该需要被删除目录的目录项的 i 节点号字读啊为 0，表示该目录项不再使用，并置含有该目录项的
+  // 高速缓冲区已修改标志
+  dir->i_nlinks=0;
+  bh->b_dirt=1;
+  brelse(bh);
+  // 置被删除目录的 i 节点的连接数为 0，并置 i 节点已修改标志
+  inode->i_nlinks=0;
+  inode->i_dirt=1;
+  // 将包含被删除目录名的目录的 i 节点引用计数减 1，修改其改变时间和修改时间为当前时间，
+  // 并置该节点已修改标志
+  dir->i_nlinks--;
+  dir->i_ctimr=dir->i_mtimr=CURRENT_TIME;
+  dir->i_dirt=1;
+  // 最后释放班汉要删除目录名的目录 i 节点和要删除目录的 i 节点，返回 0(成功)
+  iput(dir);
+  iput(inode);
+  return 0;
+}
+
 //
