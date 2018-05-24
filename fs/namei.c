@@ -839,4 +839,144 @@ int sys_rmdir(const char * name){
   return 0;
 }
 
-//
+// 系统调用函数-删除文件名以及可能也删除其相关的文件。
+// 从文件系统删除一个名字。如果是一个文件的最后一个连接，并且没有进程正打开该文件，则该文件也将
+// 被删除，并释放所占用的设备空间
+// 参互：name-文件名。
+// 返回：成功则返回 0，否则返回出错号
+int sys_unlink(const chat * name){
+  const char * basename;
+  int namelen;
+  struct m_inode * dir, * inode;
+  struct buffer_head * bh;
+  struct dir_entry * de;
+  // 如果找不到对应路径名目录的 i 节点，则返回出错码
+  if(!(dir=dir_namei(name, &namelen, &basename)))
+    return -ENOENT;
+  // 如果最顶端的文件名长度为 0，则说明给出的路径名最后没有指定文件名，释放该目录 i 节点，返回
+  // 出错码，退出
+  if(!namelen){
+    iput(dir);
+    return -ENOENT;
+  }
+  // 如果在该目录中没有写的权限，则释放该目录的 i 节点，返回访问许可出错码，退出
+  if(!permission(dir, MAY_WRITE)){
+    iput(dir);
+    return -EPERM;
+  }
+  // 如果对应路径名上最后的文件名的目录项不存在，则释放包含该目录想的高速缓冲区，释放目录的 i 节点，
+  // 返回文件已经存在出错码，退出。否则 dir 是包含要被删除目录名的目录 i 节点，de 是要被删除目录的目录项结构。
+  bh=find_entry(&dir, basename, namelen, &de);
+  if(!bh){
+    iput(dir);
+    return -ENOENT;
+  }
+  // 取该目录项指明的 i 节点。若出错则释放目录 i 节点，并释放含有目录项的高速缓冲，返回出错号。
+  if(!(inode=iget(dir0>i_dev, de->inode))){
+    iput(dir);
+    brelse(bh);
+    return -EPERM;
+  }
+  // 如果该指定文件名是一个目录，则也不能删除，释放该目录 i 节点和该文件名目录项的 i 节点，释放包含
+  // 该目录项的缓冲区，返回出错号
+  if(S_ISDIR(inode->i_mode)){
+    iput(inode);
+    iput(dir);
+    brelse(bh);
+    return -EPERM;
+  } // 如果该 i 节点的连接数已经为 0，则显示警告信息，修正其为 1
+  if(!inode->i_nlinks){
+    printk("Deleting nonexistent file (%04x: %d), %d\n", inode->i_dev, inode->i_num,
+            inode->i_nlinks);
+    inode->i_nlinks=1;
+  }
+  // 将该文件名的目录项中的 i 节点号字段置为 0，表示释放该目录项，并设置包含该目录项的缓冲区
+  // 已修改标志，释放该高速缓冲区
+  de->inode=0;
+  bh->b_dirt=1;
+  brelse(bh);
+  // 该 i 节点的连接数减 1.置已修改标志，更新改变时间为当前时间。最后释放该 i 节点和目录的 i 节点，
+  // 返回 0(成功)
+  inode->i_nlinks--;
+  inode->i_dirt=1;
+  inode->i_ctime=CURRENT_TIME;
+  iput(inode);
+  iput(dir);
+  return 0;
+}
+
+// 系统调用函数-为文件建立一个文件名。唯一存在文件建一个新连接(也称硬连接-hard link)
+// 参数：oldname-原路径名；newname-新的路径名。
+// 返回：若成功则返回 0，否则返回出错号。
+int sys_link(const chat * oldname, const chat * newname){
+  struct dir_entry * de;
+  struct m_inode * oldinode, * dir;
+  struct buffer_head * bh;
+  const char * basename;
+  int namelen;
+  // 取原文件路径名对应的 i 节点 oldinode。如果为 0，则表示出错，返回出错号。
+  oldinode=namei(oldname);
+  if(!oldinode)
+    return -ENOENT;
+  // 如果原路径名对应的是一个目录名，则释放该 i 节点，返回出错号
+  if(S_ISDIR(oldinode->i_mode)){
+    iput(dir);
+    return -EPERM;
+  }
+  // 查找新路径名的最顶层目录的 i 节点，并返回最后的文件名长度。如果目录的 i 节点没有找到，则
+  // 释放原路径名的 i 节点，返回出错号。
+  dir=dir_namei(newname, &namelen, &basename);
+  if(!dir){
+    iput(oldname);
+    return -EACCES;
+  }
+  // 如果新路径名中不包括文件名，则释放原路径名 i 节点和新路径名目录的 i 节点，返回出错号
+  if(!namelen){
+    iput(oldinode);
+    iput(dir);
+    return -EPERM;
+  }
+  // 如果新路径名目录的设备号与原路径名的设备号不一样，则也不能建立连接，于是释放新路径名目录
+  // 的 i 节点和原路径名的 i 节点，返回出错号
+  if(dir->i_dev!=oldinode->i_dev){
+    iput(dir)
+    iput(oldinode);
+    return -EXDEV;
+  }
+  // 如果用户没有在新目录中写的权限，则也不能建立连接，于是释放新路径名目录的 i 节点和原路径
+  // 名的 i 节点，返回出错号
+  if(!permission(dir, MAY_WRITE)){
+    iput(dir);
+    iput(oldinode);
+    return -EACCES;
+  }
+  // 查询该新路径名是否已经存在，如果存在，则也不能建立连接，于是释放包含在已存在目录项的高速缓冲区，
+  // 释放新路径名目录的 i 节点，返回出错号
+  bh=find_entry(&dir, basename, namelen, &de);
+  if(bh){
+    brelse(bh);
+    iput(dir);
+    iput(oldinode);
+    return -EEXIST;
+  }
+  // 在新目录中添加一个目录项，若失败则释放该目录的 i 节点和原路径名的 i 节点，返回出错号。
+  bh=add_entrty(dir, basename, namelen, &de);
+  if(!bh){
+    iput(dir);
+    iput(oldinode);
+    return -ENOSPC;
+  }
+  // 否则初始设置该目录项的 i 节点号等于原路径名的 i 节点号，并置包含该新添目录项的高速缓冲区
+  // 已修改标志，释放该缓冲区，释放目录的 i 节点
+  de->inode=oldinode->i_num;
+  bh->b_dirt=1;
+  brelse(bh);
+  iput(dir);
+  // 将原节点的应用计数加 1，修改其该表时间为当前时间，并设置 i 节点已修改标志，最后释放原路径名
+  // 的 i 节点，并返回 0(成功)
+  oldinode->i_nlinks++;
+  oldinode->i_ctime=CURRENT_TIME;
+  oldinode->i_dirt=1;
+  iput(oldinode);
+  return 0;
+}
