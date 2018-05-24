@@ -10,7 +10,7 @@
 
 #include <string.h> // 字符串头文件.主要定义了一些有关字符串操作的嵌入函数
 #include <fcntl.h> // 文件控制头文件。用于文件及其描述符的操作控制常数符号的定义。
-#include <error.h> // 错误号头文件。包含系统中各种出错号(Linus 从 MINIX 中引进的)。
+#include <errno.h> // 错误号头文件。包含系统中各种出错号(Linus 从 MINIX 中引进的)。
 #include <const.h> // 常数符号头文件。目前仅定义了 i 节点中 i_mode 字段的各标志位。
 #include <sys/stat.h> // 文件状态头文件.含有文件或文件系统状态结构 stat{} 和常量.
 
