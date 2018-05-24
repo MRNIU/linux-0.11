@@ -427,5 +427,173 @@ int open_namei(const char * pathname, int flag, int mode, struct m_inode ** res_
   struct m_inode * dir, * inode;
   struct buffer_head * bh;
   struct dir_entry * de;
-  // 如果文件访问许可模式是只读(0)，
+  // 如果文件访问许可模式是只读(0)，但文件截 0 标志 O_TRUNC 却置位了，则改为只写标志
+  if((flag&O_TRUNC)&&!(flag&O_ACCMODE))
+    flag|=O_WRONLY;
+  // 使用进程的文件访问许可屏蔽码，屏蔽掉给定模式中的相应位，并天上普通文件标志。
+  mode&=0777 &~ current->umask;
+  mode|=I_REGULAR;
+  // 根据路径名寻找到对应的 i 节点，以及最顶端文件名及其长度
+  if(!(dir=dir_namei(pathname, &namelen, &basename)))
+    return -ENOENT;
+  // 如果最顶端文件名长度为 0(例如：'/usr' 这种路径名的情况)，那么若打开操作不是创建、截 0，
+  // 则表示打开一个目录名，直接返回该目录的 i 节点，并退出。
+  if(!namelen){
+    if(!(flag&(O_ACCMODE|O_CREAT|O_TRUNC))){
+      *res_inode=dir;
+      return 0;
+    }
+    iput(dir);
+    return -EISDIR;
+  }
+  // 在 dir 节点对应的目录中取文件名对应的目录项结构 de 和该目录项所在的高速缓冲区。
+  bh=find_entry(&dir, basename, namelen, &de);
+  // 如果该高速缓冲指针为 NULL，则表示没有找到对应文件名的目录项，因此只可能是创建文件操作。
+  if(!bh){
+    // 如果不是创建文件，则释放该目录的 i 节点，返回出错号退出
+    if(!(flag&O_CREAT)){
+      iput(dir);
+      return -ENOENT;
+    }
+    // 如果用户在该目录没有写的权利，则释放该目录的 i 节点，返回出错号退出
+    if(!permission(dir, MAY_WRITE)){
+      iput(dir);
+      return -EACCES;
+    }
+    // 在目录节点对应设备上申请一个新 i 节点，若失败，则释放目录的 i 节点，并返回没有空间出错码。
+    inode=new_inode(dir->i_dev);
+    if(!inode){
+      iput(dir);
+      return -ENOSPC;
+    }
+    // 否则使用该新 i 节点，对其进行初始设置：置节点的用户 id；对应节点访问模式；置已修改标志
+    inode->i_uid=current->euid;
+    inode->i_mode=mode;
+    inode->i_dirt=1;
+    // 然后在指定目录 dir 中添加一新目录项
+    bh=add_entrty(dir, basename, namelen, &de);
+    // 如果返回的应该含有新目录项的高速缓冲区指针为 NULL，则表示添加目录项操作失败。于是将该新
+    // i 节点的引用连接计数减 1；并释放该 i 节点与目录的 i 节点，返回出错码，退出
+    if(!bh){
+      inode->i_nlinks--;
+      iput(inode);
+      iput(dir);
+      return -ENOSPC;
+    }
+    // 初始设置该新目录项：置 i 节点号为新申请到的 i 节点的号码；并置高速缓冲区已修改标志。然后释放
+    // 该高速缓冲区，释放目录的 i 节点。返回新目录项的 i 节点指针，退出
+    de->inode=inode->i_num;
+    bh->b_dirt=1;
+    brelse(bh);
+    iput(dir);
+    *res_inode=inode;
+    return 0;
+  }
+  // 若上面在目录中取文件名对应的目录项结构操作成功(即 bh 不为 NULL)，取出该目录项的 i 节点
+  // 号和其所在的设备号，并释放该高速缓冲区以及目录的 i 节点
+  inr=de->inode;
+  dev=dir->i_dev;
+  brelse(bh);
+  iput(dir);
+  // 如果独占使用标志 O_EXCL 置位，则返回文件已存在出错码，退出
+  if(flag&O_EXCL)
+    return -EEXIST;
+  // 如果取该目录项对应 i 节点的操作失败，则返回访问出错码，退出
+  if(!(inode=iget(dev, inr)))
+    return -EACCES;
+  // 若该 i 节点是一个目录的节点并且访问模式是只读或读写，或者没有访问的许可权限，则释放该 i 节点，
+  // 返回访问权限出错码，退出
+  if((S_ISDIR(inode->i_mode)&&(flag&O_ACCMODE))||!permission(inode, ACC_MODE(flag))){
+    iput(inode);
+    return -EPERM;
+  }
+  inode->i_atime=CURRENT_TIME;  // 更新该 i 节点的访问时间自断为当前时间
+  if(flag&O_TRUNC)  // 如果设立了截 0 标志，则将该 i 节点的文件长度截为 0
+    truncate(inode);
+  *res_inode=inode; // 最后返回该目录项 i 节点的指针，并返回 0(成功)
+  return 0;
+}
+
+// 系统调用函数-创建一个特殊文件或普通文件节点(node)
+// 创建名称为 filename，由 mode 和 dev 指定的文件系统节点(普通文件、设备特殊文件或命名管道)
+// 参数：filename-路径名；mode-指定使用许可以及所创建节点的类型；dev-设备号
+// 返回：成功则返回 0，否则返回出错码
+int sys_mknod(const char * filename, int mode, int dev){
+  const char * basename;
+  int namelen;
+  struct m_inode * dir, * inode;
+  struct buffer_head * bh;
+  struct dir_entry * de;
+
+  if(!suser())  // 如果不是超级用户，则返回访问许可出错码
+    return -EPERM;
+  // 如果找不到对应路径名目录的 i 节点，则返回出错码
+  if(!(dir=dir_namei(filename, &namlen, &basename)))
+    return -ENOENT;
+  // 如果最顶端的文件名长度为 0，则说明给出的路径名最后没有指定文件名，释放该目录 i 节点，返回
+  // 出错码，退出
+  if(!namelen){
+    iput(dir);
+    return -ENOENT;
+  }
+  // 如果在该目录中没有写的权限，则释放该目录的 i 节点，返回访问许可出错码，退出
+  if(!permission(dir, MAY_WRITE)){
+    iput(dir);
+    return -EPERM;
+  }
+  // 如果对应路径名上最后的文件名的目录项已经存在，则释放包含该目录项的高速缓冲区，释放目录的
+  // i 节点，返回文件已经存在出错码，退出
+  bh=find_entry(&dir, basename, namelen, &de);
+  if(bh){
+    brelse(bh);
+    iput(dir);
+    return -EEXIST;
+  }
+  // 申请一个新的 i 节点，如果不成功，则释放目录的 i 节点，返回无空间出错码，退出
+  inode->new_inode(dir->i_dev);
+  if(!inode){
+    iput(dir);
+    return -ENOSPC;
+  }
+  // 设置该 i 节点的属性模式。如果要创建的是块设备文件或者是字符设备文件，则令 i 节点的直接块
+  // 指针 0 等于设备号
+  inode->i_mode=mode;
+  if(S_ISBLK(mode)||S_ISCHR(mode))
+    inode->i_zone[0]=dev;
+  // 设置该 i 节点的修改时间、访问时间为当前时间
+  inode->i_mtime=inode->i_atime=CURRENT_TIME;
+  inode->i_dirt=1;
+  // 在目录中新添加一个目录项，如果失败(包含该目录项的高速缓冲区指针为 NULL)，则释放目录的 i
+  // 节点；所申请的 i 节点引用计数复位，并释放该 i 节点。返回出错码，退出。
+  bh=add_entrty(dir, basename, namelen, &de);
+  if(!bh){
+    iput(dir);
+    inode->i_nlinks=0;
+    iput(inode);
+    return -ENOSPC;
+  }
+  // 令该目录项的 i 节点字读啊等于新 i 节点号，置高速缓冲区已修改标志，释放目录和新的 i 节点，
+  // 释放高速缓冲区，最后返回 0(成功)
+  de->inode=inode->i_num;
+  bh->b_dirt=1;
+  iput(dir);
+  ipit(inode);
+  brelse(bh);
+  return 0;
+}
+
+// 系统调用函数-创建目录。参数：pathname-路径名；mode-牡蛎使用的权限属性
+// 返回：成功则返回 0，否则返回 出错码
+int sys_mkdir(const char * pathname, int mode){
+  const char * basename;
+  int namelen;
+  struct m_inode * dir, * inode;
+  struct buffer_head * bh, * dir_block;
+  struct dir_entry * de;
+
+  if(!suser())  // 如果不是超级用户，则返回访问许可出错码
+    return -EPERM;
+  // 如果找不到对应路径名目录的 i 节点，则返回出错码
+  if(!(dir=dir_namei(pathname, &namlen, &basename)))
+    return -ENOENT;
 }
