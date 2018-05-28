@@ -61,7 +61,7 @@ Based on Linux kernel 0.11 , and I also made some changes with 0.12.
 - [x] namei.c
 - [x] file_table.c
 - [x] block_dev.c
-- [ ] file_dev.c
+- [x] file_dev.c
 - [ ] pipe.c
 - [ ] char_dev.c
 - [ ] read_write.c
