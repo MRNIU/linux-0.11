@@ -64,8 +64,8 @@ Based on Linux kernel 0.11 , and I also made some changes with 0.12.
 - [x] file_dev.c
 - [x] pipe.c
 - [x] char_dev.c
-- [ ] read_write.c
-- [ ] truncate.c
+- [x] read_write.c
+- [x] truncate.c
 - [ ] open.c
 - [ ] exec.c
 - [ ] stat.c
