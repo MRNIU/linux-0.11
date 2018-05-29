@@ -1,4 +1,4 @@
-#include <signal.h>
+#include <signal.h> // 信号头文件。定义信号符号常量，信号结构以及信号操作函数原型。
 
 #include <linux/sched.h> // 调度程序头文件,定义任务结构 task_struct、初始任务 0 的数据
 #include <linux/mm.h> // for get_free_page 使用其中的 get_free_page

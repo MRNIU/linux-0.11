@@ -1,4 +1,4 @@
-#include <sys/stat.h> // 文件状态有文件。文件或文件系统状态结构 stat{} 和常量
+#include <sys/stat.h> // 文件状态头文件。含有文件或文件系统状态结构 stat{} 和常量
 #include <errno.h>  // 错误号头文件。包含系统中各种出错号.(Linus 从 MINIX 中引进的)
 #include <sys/types.h>  // 类型头文件。定义了基本的系统数据类型
 
