@@ -1,4 +1,5 @@
 //page.s contains the low-level page-exception code.the real work is done in mm.c
+// page.s 程序包含底层页异常处理代码。实际的工作在 memory.c 中完成。
 
 .globl page_fault       # 声明为全局变量。将在traps.c中用于设置页异常描述符。
 
@@ -18,9 +19,9 @@ page_fault:
 	pushl %eax
 	testl $1,%eax           # 测试页存在标志P（为0），如果不是缺页引起的异常则跳转
 	jne 1f
-	call do_no_page         # 调用缺页处理函数
+	call do_no_page         # 调用缺页处理函数(mm/momery.c, 22222)
 	jmp 2f
-1:	call do_wp_page         # 调用写保护处理函数
+1:	call do_wp_page         # 调用写保护处理函数(mm/momery.c, 22222)
 2:	addl $8,%esp            # 丢弃压入栈的两个参数，弹出栈中寄存器并退出中断。
 	pop %fs
 	pop %es
