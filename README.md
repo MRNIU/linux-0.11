@@ -1,4 +1,4 @@
-# Linux-Kernel
+# linux-0.11
 
 来自 `Linux 内核完全注释` 的内容,从 0.11 内核版本开始,完成后参考 0.12 版本进行修改.旨在加深对操作系统的理解.
 
@@ -66,7 +66,7 @@ Based on Linux kernel 0.11 , and I also made some changes with 0.12.
 - [x] char_dev.c
 - [x] read_write.c
 - [x] truncate.c
-- [ ] open.c
+- [x] open.c
 - [ ] exec.c
 - [ ] stat.c
 - [ ] fcntl.c
@@ -76,22 +76,23 @@ Based on Linux kernel 0.11 , and I also made some changes with 0.12.
 
 ## 内存管理 memory
 - [ ] memory.c
-- [ ] page.c
-
+- [x] page.s
 
 ## 包含文件 include
 
-
+done -without commit
 
 ## 内核库文件 
 
-
+done -without commit
 
 ## 内核组建工具 tools
 
+done -without commit
 
 # 参考资料
 - Linux 内核完全注释--赵炯 机械工业出版社,ISBN:978-7-111-14968-2
 
+- https://github.com/karottc/linux-0.11
 
 
