@@ -97,58 +97,68 @@ int main(int argc, char ** argv){
 	// 读取文件中的 MINIX 执行头部信息(参见列表后说明)，若出错则显示出错信息，退出
 	if (read(id,buf,MINIX_HEADER) != MINIX_HEADER)
 		die("Unable to read header of 'boot'");
-	// 0x0301-MINIX 头部 a_magic 魔数
+	// 0x0301-MINIX 头部 a_magic 魔数; 0x10-a_flag 可执行；0x04-a_cpu, Intel 8086 机器码
 	if (((long *) buf)[0]!=0x04100301)
 		die("Non-Minix header of 'boot'");
+	// 判断头部长度字段 a_hdrlen(字节)是否正确(后三字节正好没有使用，是 0)
 	if (((long *) buf)[1]!=MINIX_HEADER)
 		die("Non-Minix header of 'boot'");
-	if (((long *) buf)[3]!=0)
+	if (((long *) buf)[3]!=0)	// 判断数据段长 a_data 字段(long)内容是否为 0
 		die("Illegal data segment in 'boot'");
-	if (((long *) buf)[4]!=0)
+	if (((long *) buf)[4]!=0)	// 判断堆 a_bss 字段(long)内容是否为 0
 		die("Illegal bss in 'boot'");
-	if (((long *) buf)[5] != 0)
+	if (((long *) buf)[5] != 0)	// 判断执行点 a_entry d字段(long)内容是否为 0
 		die("Non-Minix header of 'boot'");
-	if (((long *) buf)[7] != 0)
+	if (((long *) buf)[7] != 0)	// 判断符号表长字段 a_sym 的内容是否为 0
 		die("Illegal symbol table in 'boot'");
-	i=read(id,buf,sizeof buf);
+	i=read(id,buf,sizeof buf);	// 读取实际代码数据，应返回读取字节数为 512 字节
 	fprintf(stderr,"Boot sector %d bytes.\n",i);
 	if (i != 512)
 		die("Boot block must be exactly 512 bytes");
+	// 判断 boot 块 0x510 处是否有可引导标志 0xAA55
 	if ((*(unsigned short *)(buf+510)) != 0xAA55)
 		die("Boot block hasn't got boot flag (0xAA55)");
-	buf[508] = (char) minor_root;
+	buf[508] = (char) minor_root;	// 引导块的 508，509 偏移处存放的是根设备号
 	buf[509] = (char) major_root;
+	// 将该 boot 块 512 字节的数据写到比爱准输出 stdout，若写出字节数不对，则显示出错信息，退出
 	i=write(1,buf,512);
 	if (i!=512)
 		die("Write call failed");
-	close (id);
+	close (id);	// 最后关闭 bootsect 模块文件
 
+// 现在开始处理 setup 模块。首先以制度方式打开该模块，若出错则显示出错信息，退出
 	if ((id=open(argv[2],O_RDONLY,0))<0)
 		die("Unable to open 'setup'");
+	// 读取该文件中的 MINIX 执行头部信息(32 字节)，若出错则显示出错信息，退出
 	if (read(id,buf,MINIX_HEADER) != MINIX_HEADER)
 		die("Unable to read header of 'setup'");
+	// 0x0301-MINIX 头部 a_magic 魔数; 0x10-a_flag 可执行；0x04-a_cpu, Intel 8086 机器码
 	if (((long *) buf)[0]!=0x04100301)
 		die("Non-Minix header of 'setup'");
+	// 判断头部长度字段 a_hdrlen(字节)是否正确(后三字节正好没有使用，是 0)
 	if (((long *) buf)[1]!=MINIX_HEADER)
 		die("Non-Minix header of 'setup'");
-	if (((long *) buf)[3]!=0)
+	if (((long *) buf)[3]!=0)	// 判断数据段长 a_data 字段(long)内容是否为 0
 		die("Illegal data segment in 'setup'");
-	if (((long *) buf)[4]!=0)
+	if (((long *) buf)[4]!=0)	// 判断堆 a_bss 字段(long)内容是否为 0
 		die("Illegal bss in 'setup'");
-	if (((long *) buf)[5] != 0)
+	if (((long *) buf)[5] != 0)	// 判断数据段长 a_entry 字段(long)内容是否为 0
 		die("Non-Minix header of 'setup'");
-	if (((long *) buf)[7] != 0)
+	if (((long *) buf)[7] != 0)	// 判断数据段长 a_sym 字段(long)内容是否为 0
 		die("Illegal symbol table in 'setup'");
+	// 读取随后的执行代码数据，并写道标准输出 stdout
 	for (i=0 ; (c=read(id,buf,sizeof buf))>0 ; i+=c )
 		if (write(1,buf,c)!=c)
 			die("Write call failed");
-	close (id);
+	close (id);	// 关闭 setup 文件
+	// 若 setup 模块长度大于 4 个扇区，则算出错，显示出错信息，退出
 	if (i > SETUP_SECTS*512)
 		die("Setup exceeds " STRINGIFY(SETUP_SECTS)
 			" sectors - rewrite build/boot/setup");
-	fprintf(stderr,"Setup is %d bytes.\n",i);
-	for (c=0 ; c<sizeof(buf) ; c++)
+	fprintf(stderr,"Setup is %d bytes.\n",i);	// 在 stderr 显示 setup 文件长度值
+	for (c=0 ; c<sizeof(buf) ; c++)	// 将缓冲区 buf 清零
 		buf[c] = '\0';
+	// 若 setup 长度小于 4*512 字节，则用 \0 将 setup 填足为 4*512 字节
 	while (i<SETUP_SECTS*512) {
 		c = SETUP_SECTS*512-i;
 		if (c > sizeof(buf))
@@ -158,17 +168,21 @@ int main(int argc, char ** argv){
 		i += c;
 	}
 
+// 下面处理 system 模块。首先以制度方式打开该文件
 	if ((id=open(argv[3],O_RDONLY,0))<0)
 		die("Unable to open 'system'");
-//	if (read(id,buf,GCC_HEADER) != GCC_HEADER)
-//		die("Unable to read header of 'system'");
-//	if (((long *) buf)[5] != 0)
-//		die("Non-GCC header of 'system'");
+	if(read(id, buf, GCC_HEADER)!=GCC_HEADER)
+		die("Unable to read header of 'system'");
+	if(((long*)buf)[5]!=0)
+		die("Non-GCC header of 'system'");
+	// 读取随后的执行代码数据，并写到标准输出 stdout
 	for (i=0 ; (c=read(id,buf,sizeof buf))>0 ; i+=c )
 		if (write(1,buf,c)!=c)
 			die("Write call failed");
+	// 关闭 system 文件，并向 stderr 上打印 systen 的字节数
 	close(id);
 	fprintf(stderr,"System is %d bytes.\n",i);
+	// 若 system 代码数据长度超过 SYS_SIZE(或 128KB)，则显示出错信息，退出
 	if (i > SYS_SIZE*16)
 		die("System is too big");
 	return(0);
