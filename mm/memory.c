@@ -64,7 +64,7 @@ static long HIGH_MEMORY = 0;	// 全局变量，存放实际物理内存最高端
 
 // 复制1 页内存（4K 字节）。
 #define copy_page(from,to) \
-__asm__("cld ; rep ; movsl":: "S" (from), "D" (to), "c" (1024): "cx", "di", "si")
+__asm__("cld ; rep ; movsl":: "S" (from), "D" (to), "c" (1024))
 
 // 内存映射字节图(1 字节代表 1 页内存)，每个页面对应的字节用于标志页面当前被引用(占用)次数。
 static unsigned char mem_map[PAGING_PAGES]={ 0, };
@@ -100,7 +100,7 @@ unsigned long get_free_page(void){
      :"=a" (__res)
      :"" (0),"i"(LOW_MEM), "c" (PAGING_PAGES),
      "D" (mem_map+ PAGING_PAGES - 1)
-     :"di", "cx", "dx");
+      );
   return __res;			// 返回空闲页面地址（如果无空闲也则返回0）。
 }
 

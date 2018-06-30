@@ -10,7 +10,7 @@
 __asm__("cld\n\t"\
         "rep\n\t"\
         "stosl"\
-        ::"a"(0),"c"(BLOCK_SIZE/4),"D"((long)(addr)):"cx","di")
+        ::"a"(0),"c"(BLOCK_SIZE/4),"D"((long)(addr)))
 
 // 置位指定地址开始的第 nr 个位偏移处的比特位(nr 可以大于 32!).返回原比特位(0 或 1)
 // 输入:%0-eax(返回值),%1-eax(0);%2-nr,位偏移值;%3-(addr),addr 的内容
@@ -43,7 +43,7 @@ __asm__("cld\n"\
         "cmpl $8192,%%ecx\n\t"\
         "jl 1b\n"\
         "3:"\
-        :"=c"(__res):"c"(0),"S"(addr):"ax","dx","si");\
+        :"=c"(__res):"c"(0),"S"(addr));\
         __res;})
 
 // 释放设备 dev 上数据区中的逻辑块 block
@@ -71,7 +71,7 @@ void free_block(int dev,int block){
 // 计算 block 在数据区开始算起的数据逻辑块号(从 1 开始计数).然后对逻辑块(区块)位图进行操作,
 // 复位对应的比特位.若对应比特位原来即是 0,则出错,死机.
   block-=sb->s_firstdatazone-1;
-  if(clear_bit(block&8191,sb->s_zmap[block/8192]->b-data)){
+  if(clear_bit(block&8191,sb->s_zmap[block/8192]->b_data)){
     printk("block (%04x:%d)",dev,block+sb->s_firstdatazone-1);
     panic("free_block: bit already cleared");
   }
@@ -135,7 +135,7 @@ void free_inode(struct m_inode *inode){
 // 如果 i 节点号 =0 或大于该设备上 i 节点总数,则出错(0 号 i 接待你保留没有使用)
   if(inode->i_num<1||inode->i_num>sb->s_ninodes)  panic("trying to free inode 0 or nonexistant inode");
 // 如果该 i 节点对应的节点位图不存在,则出错
-  if(!(bh->sb->s_imap[inode->i_num>>13])) panic("nonexistent impa in superblock");
+  if(!(bh=sb->s_imap[inode->i_num>>13])) panic("nonexistent impa in superblock");
 // 复位 i 节点对应的节点位图中的比特位,如果该比特为已经等于 0,则出错
   if(clear_bit(inode->i_num&8191,bh->b_data)) printk("free_inode:bit already cleared.\n\r");
 // 置 i 节点位图所在缓冲区已修改标志,并清空该 i 节点结构所占内存区

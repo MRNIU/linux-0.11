@@ -16,7 +16,7 @@
 /* 注意！有一个程序应不属于这里：检测软盘是否更换。但我想这里是放置该程序最好的地方了，因为它需要
  * 使已更换软盘缓冲失败
  */
-#include <sedarg.h> // 标准参数头文件。以宏的形式定义变量参数列表
+#include <stdarg.h> // 标准参数头文件。以宏的形式定义变量参数列表
 
 #include <linux/config.h> // 内核配置头文件。定义键盘语言和硬盘类型(HD_TYPE)可选项
 #include <linux/sched.h>  // 调度程序头文件，定义任务结构 task_struct、初始任务 0 的数据
@@ -25,7 +25,7 @@
 #include <asm/io.h> // io 头文件。定义硬件端口输入/输出宏汇编语句
 
 extern int end; // 又链接程序 ls 生成的表明程序末端的变量
-struct buffer_head * start_buffer=(struct buffer_head)&end;
+struct buffer_head * start_buffer=(struct buffer_head*)&end;
 struct buffer_head * hash_table[NR_HASH]; // NR_HASH=307 项
 static struct buffer_head * free_list;
 static struct task_struct * buffer_wait=NULL;
@@ -159,7 +159,7 @@ static inline void insert_into_queues(struct buffer_head * bh){
 // 在高速缓冲中寻找给定设备和指定块的缓冲区块.若找到则返回h缓冲块指针,否则返回 NULL.
 static struct buffer_head * find_buffer(int dev,int block){
   struct buffer_head * tmp;
-  for(tmp=hash(dev,block);tmp!NULL;tmp=tmp->b_next)
+  for(tmp=hash(dev,block);tmp!=NULL;tmp=tmp->b_next)
     if(tmp->b_dev==dev&&tmp->b_blocknr==block)
       return tmp;
   return NULL;
@@ -175,7 +175,7 @@ static struct buffer_head * find_buffer(int dev,int block){
  * 它们中的数据),那么当我们(进程)睡眠时缓冲区可能会发生一些问题(例如一个读错误将导致该缓冲区出错).
  * 目前这种情况实际上是不会发生的,但处理的代码已经准备好了.
  */
-struct buffer_head * get_hash_table(int dev,int b_lock){
+struct buffer_head * get_hash_table(int dev,int block){
   struct buffer_head * bh;
   for(;;){
 // 在高速缓冲区中寻找给定设备和指定块的缓冲区,如果没有找到则返回 NULL,退出
@@ -184,7 +184,7 @@ struct buffer_head * get_hash_table(int dev,int b_lock){
     bh->b_count++;
     wait_on_buffer(bh);
 // 由于经过了睡眠状态,因此有必要早验证该缓冲区块的正确性,并返回缓冲区头指针
-    if(bh->b_dev==dev&&bh->bh->b_blocknr==block)  return bh;
+    if(bh->b_dev==dev&&bh->b_blocknr==block)  return bh;
     bh->b_count--;
   }
 }
@@ -247,7 +247,7 @@ repeat:
 // 从 hash 队列和空闲块链表中移除该缓冲区头,让该缓冲区用于指定设备和其上的指定块.
   remove_from_queues(bh);
   bh->b_dev=dev;
-  bh->b_blocknr=b_lock;
+  bh->b_blocknr=block;
 // 然后根据此新的设备号和块号重新插入空闲链表和 hash 队列新位置处.并最终返回缓冲头指针.
   insert_into_queues(bh);
   return bh;
@@ -258,7 +258,7 @@ void brelse(struct buffer_head * buf){
   if(!buf)  return;
   wait_on_buffer(buf);
   if(!(buf->b_count--)) panic("Trying to free buffer");
-  wake_up(&buffer_wait;
+  wake_up(&buffer_wait);
 }
 
 // bread() reads a specified block and returns the buffer that contains it. It
@@ -280,9 +280,9 @@ struct buffer_head * bread(int dev,int block){
 #define COPYBLK(from,to)\
 __asm__("cld\n\t"\
         "rep\n\t"\
-        "movsl\n\t"
+        "movsl\n\t"\
         ::"c"(BLOCK_SIZE/4),"S"(from),"D"(to)\
-        :"cx","di","si")
+        )
 // bread_page reads four buffers into memory at the desired address.It's a function
 // of its own,as there is some speed to be got by reading them all at the same
 // time,not waiting for one to be read,and then another etc.

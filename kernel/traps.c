@@ -64,7 +64,7 @@ static void die(char * str,long esp_ptr,long nr){
   int i;
 
   printk("%s: %04x\n\r",str,nr&0xffff);
-  printk("EIP:\t %04x: %p\nEFLAGS:\t %p\nESP:\t %04x: %p\n"),
+  printk("EIP:\t %04x: %p\nEFLAGS:\t %p\nESP:\t %04x: %p\n",
         esp[1],esp[0],esp[2],esp[4],esp[3]);
   printk("base: %p,limit: %p\n",get_base(current->ldt[1]),get_limit(0x17));
   if(esp[4]==0x17){

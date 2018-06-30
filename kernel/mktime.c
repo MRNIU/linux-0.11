@@ -15,7 +15,7 @@
 #define MINUTE 60 // 1 分钟的秒数
 #define HOUR (60*MINUTE) // 1 小时的秒数
 #define DAY (24*HOUR) // 1 天的秒数
-#define YEAR(365*DAY) // 1 年的秒数
+#define YEAR (365*DAY) // 1 年的秒数
 // 有趣的是我们考虑进了闰年
 // interestingly,we assume leap-years
 static int month[12]={  // 下面以年为界限，定义了每个月开始时的秒数时间数组
@@ -45,7 +45,7 @@ long kernel_mktime(struct tm * tm){
 // and (y+2) here.If it wasn't a leap-yaar,we have to adjust
 // 以及 (y+2)。如果 (y+2) 不是闰年，那么我们就必须进行调整(减去一天的秒数时间)。
   if(tm->tm_mon>1&&((year+2)%4))
-    res-=Day;
+    res-=DAY;
   res+=DAY*(tm->tm_mday-1); // 再加上本月过去的天数的秒数时间
   res+=HOUR*tm->tm_hour;  // 再加上当天过去的小时数的秒数时间
   res+=MINUTE*tm->tm_min; // 再加上 1 小时内过去的分钟数的秒数时间

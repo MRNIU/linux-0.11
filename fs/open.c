@@ -31,7 +31,7 @@ int sys_utime(char * filename, struct utimbuf * times){
   }
   else
     actime=modtime=CURRENT_TIME;
-  inode->i_actime=actime;
+  inode->i_atime=actime;
   inode->i_mtime=modtime;
   inode->i_dirt=1;
   iput(inode);
@@ -95,30 +95,19 @@ int sys_chdir(const char * filename){
 
 // 改变根目录系统调用函数。将制定的路径名改为根目录 '/'
 // 如果操作成功则返回 0，否则返回出错码
-int sys_chroot(const char * filenme){
+int sys_chroot(const char * filename){
   struct m_inode * inode;
   // 如果文件名对应的 i 节点不存在，则返回出错码
-  if(!(inode->namei(filename)))
+  if(!(inode=namei(filename)))
     return -ENOENT;
   // 如果该 i 节点不是目录的 i 节点，则释放该节点，返回出错码。
   if(!S_ISDIR(inode->i_mode)){
     iput(inode);
     return -ENOTDIR;
   }
-  // 释放当前进程的根目录 i 节点，则释放该节点，返回出错码
-  if(!(inode->namei(filename)))
-    return -ENOENT;
-  // 如果档期啊进程的有效用户 id 不等于文件 i 节点的用户 id，并且档期啊进程不是超级用户，则释放该
-  // 文件 i 节点，返回出错码
-  if((current->euid!=inode->i_uid)&&!suser()){
-    iput(inode);
-    return -EACCES;
-  }
-  // 重新设置 i 节点的文件属性，并设置该 i 节点已修改标志。释放该 i 节点，返回 0
-  inode->i_mode=(mode&07777)|(inode->i_mode&~07777);
-  inode->i_dirt=1;
-  iput(inode);
-  return 0;
+  iput(current->root);
+	current->root = inode;
+	return (0);
 }
 
 // 修改文件宿主系统调用函数。参数 filename 是文件名，uid 时用户标示符(用户 id)，gid 是组 id

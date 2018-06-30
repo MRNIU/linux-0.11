@@ -11,6 +11,8 @@
  * are in the queue. 64 seems to be too many (easily long pauses in reading when
  * writing/syncing is going on)
  */
+#define NR_REQUEST	32
+
 /* 下面是 request 结构的一个拓展形式，因而当实现以后，我们就可以在分页请求中使用同样的 request
  * 结构。在分页处理中，'bh' 是 NULL ，而 'waiting' 则用于等待读/写的完成
  */
@@ -23,7 +25,7 @@ struct request{
   unsigned long nr_sectors; // 读/写扇区数
   char * buffer;  // 数据缓冲区
   struct task_struct * waiting; // 任务等待操作执行完成的地方
-  struct buffer_head; // 缓冲区头指针(include/linux/fs.h 2222)
+  struct buffer_head * bh; // 缓冲区头指针(include/linux/fs.h 2222)
   struct request * next;  // 指向下一请求项
 };
 
@@ -83,7 +85,7 @@ extern struct task_struct * wait_for_request; // 等待请求的任务结构
 #define DEVICE_ON(device) // 硬盘一直在工作，无须开启和关闭
 #define DEVICE_OFF(device)
 
-#elif
+#else
 // unknown blk device 未知块设备
 #error "unknow blk device"
 
@@ -120,15 +122,15 @@ extern inline void end_request(int uptodate){
   CURRENT=CURRENT->next;  // 从请求链表中删除该请求项
 }
 // 定义初始化宏
-#define INIT_REQUEST\
-repeat:\
-  if(!CURRENT)\ // 如果当前请求结构指针为 null 则返回
-    return;\
-  if(MAJOR(CURRENT->dev)!=MAJOR_NR)\  // 如果当前设备的主设备号不对则死机
+#define INIT_REQUEST \
+repeat: \
+  if(!CURRENT) \
+    return; \
+  if(MAJOR(CURRENT->dev)!=MAJOR_NR) \
     panic(DEVICE_NAME ": request list destroyed");\
-  if(CURRENT->bh){\
-    if(!CURRENT->bh->b_lock)\ // 如果在进行请求操作时缓冲区没锁定则死机
-      panic(DEVICE_NAME ": block not locked");\
+  if(CURRENT->bh){ \
+    if(!CURRENT->bh->b_lock) \
+      panic(DEVICE_NAME ": block not locked"); \
   }
 
 #endif

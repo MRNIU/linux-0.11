@@ -63,10 +63,10 @@ static int rw_port(int rw, char * buf, int count, off_t * pos){
 static int rw_memory(int rw, unsigned minor, char * buf, int count, off_t * pos){
   switch (minor) {  // 根据内存设备子设备号，分别调用不同的内存读写函数
     case 0: return rw_ram(rw, buf, count, pos);
-    casr 1: return rw_mem(rw, buf, count, pos);
-    casr 2: return rw_kmem(rw, buf, count, pos);
-    casr 3: return (rw==READ)?0:count;  // rw_null
-    casr 4: return rw_port(rw, buf, count, pos);
+    case 1: return rw_mem(rw, buf, count, pos);
+    case 2: return rw_kmem(rw, buf, count, pos);
+    case 3: return (rw==READ)?0:count;  // rw_null
+    case 4: return rw_port(rw, buf, count, pos);
     default:  return -EIO;
   }
 }

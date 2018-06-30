@@ -20,18 +20,10 @@ static inline void wait_on_inode(struct m_inode * inode){
 }
 
 // 对指定的 i 节点上锁(锁定指定的 i 节点)
-// 如果 i 节点已被锁定,则将当前任务置位不可中断的等待状态.直到该 i 节点解锁.
-static inline void wait_on_inode(struct m_inode * inode){
-  cli();
-    while(inode->i_lock)  sleep_on(&inode->i_wait);
-  sti();
-}
-
-// 对指定的 i 节点上锁(锁定指定的 i 节点)
 // 如果 i 节点已被锁定,则将当前任务置为不可中断的等待状态.直到该 i 节点解锁,然后对其上锁
 static inline void lock_inode(struct m_inode * inode){
   cli();
-  while(inode->i_locK)  sleep_on(&inode->i_wait);
+  while(inode->i_lock)  sleep_on(&inode->i_wait);
   inode->i_lock=1;  // 置锁定标志
   sti();
 }
@@ -82,7 +74,7 @@ static int _bmap(struct m_inode * inode,int block,int create){
 // 区块),并将盘上逻辑块号(盘块号)填入逻辑字段中.然后设置 i 节点修改时间,置 i 节点已修改标志.
 // 最后返回逻辑块号.
   if(create&&!inode->i_zone[block])
-    if(inode->i_zone->i_zone[block]-new_block(inode->i_dev)){
+    if((inode->i_zone[block]=new_block(inode->i_dev))){
       inode->i_ctime=CURRENT_TIME;
       inode->i_dirt=1;
     }
@@ -121,7 +113,7 @@ static int _bmap(struct m_inode * inode,int block,int create){
 // 如果是新创建并且 i 节点的二次间接块字段为 0,则需申请一磁盘块用于存放二次间接块的一级块信息,
 // 并将此实际磁盘块号填入二次间接块字段中.之后,置 i 节点哟修改标志和修改时间
   if(create&&!inode->i_zone[8])
-    if(inode->i_zone[8]=new_block(inode->_dev)){
+    if(inode->i_zone[8]=new_block(inode->i_dev)){
       inode->i_dirt=1;
       inode->i_ctime=CURRENT_TIME;
     }
@@ -263,12 +255,12 @@ struct m_inode * get_pipe_inode(void){
   }
   inode->i_count=2; // sum of readers/writers 读/写两者总计
   PIPE_HEAD(*inode)=PIPE_TAIL(*inode)=0;  // 复位管道头尾指针
-  inode->pipe=1;  // 置节点为管道使用的标志
+  inode->i_pipe=1;  // 置节点为管道使用的标志
   return inode; // 返回 i 节点指针
 }
 
 // 从设备上读取指定节点号的 i 节点.nr-i 节点号
-struct m_inode * iget(int dev.int nr){
+struct m_inode * iget(int dev, int nr){
   struct m_inode *inode,*empty;
   if(!dev)  oanic("iget with dev==0");
   empty=get_empty_inode();  // 从 i 节点表中取一个空闲 i 节点
@@ -328,7 +320,7 @@ static void read_inode(struct m_inode *inode){
   if(!(sb=get_super(inode->i_dev))) panic("trying to read inode without dev");
 // 该 i 节点所在的逻辑块号=(启动块+超级块)+i 节点位图占用的块数+逻辑块位图占用的块数+(i 节点号-1)/
 // 每块含有的 i 节点数
-  block=2+sb->s_imap_blocks+sb->s_zmap_blocks+(inode-i_num-1)/INODES_PER_BLOCK;
+  block=2+sb->s_imap_blocks+sb->s_zmap_blocks+(inode->i_num-1)/INODES_PER_BLOCK;
 // 从设备上读取该 i 节点所在的逻辑块,并复制其中指定 i 节点的内容
   if(!(bh=bread(inode->i_dev,block))) panic("unable to read i-node block");
   *(struct d_inode *)inode=((struct d_inode *)bh->b_data)[(inode->i_num-1)%INODES_PER_BLOCK];

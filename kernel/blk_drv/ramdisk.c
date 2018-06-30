@@ -15,7 +15,7 @@
 #include <string.h> // 字符串头文件。主要定义了一些有关字符串操作的嵌入式函数。
 
  #include <linux/config.h>  // 内核配置头文件。定义键盘语言和硬盘类型(HD_TYPE)可选项
- #include <linux/sched.h.>  // 调度程序头文件，定义任务结构 task_struct、初始任务 0 的数据
+ #include <linux/sched.h>  // 调度程序头文件，定义任务结构 task_struct、初始任务 0 的数据
  #include <linux/fs.h>  // 文件系统头文件。定义文件表结构(file,buffer_head,m_inode 等)
  #include <linux/kernel.h>  // 内核头文件。含有一些内核常用函数的原形定义。
  #include <asm/system.h>  // 系统头文件。定义了设置或修改描述符/中断门等的嵌入式汇编宏
@@ -66,7 +66,7 @@ long rd_init(long mem_start,int length){
   rd_start=(char *) mem_start;
   rd_length=length;
   cp=rd_start;
-  for(i=0;i<lengthli++)
+  for(i=0;i<length;i++)
     *cp++='\0';
   return length;
 }
@@ -99,7 +99,7 @@ void rd_load(void){
   }
 // s 复制缓冲区中的磁盘超级块.(d_super_block 磁盘中超级块结构)
   *((struct d_super_block *) &s)=*((struct d_super_block *) bh->b_data);
-  brelse(bh):
+  brelse(bh);
   if(nblocks=s.s_magic!=SUPER_MAGIC)  return;
   // 如果超级块中魔数不对，则说明不是 MINIX 文件系统。
   // No ram disk image present,assume normal floppy boot
@@ -122,7 +122,7 @@ void rd_load(void){
       printk("I/O error on block %d,aborting load\n",block);
       return;
     }
-    (void) memcpy(cp,bh->data,BLOCK_SIZE);  // 将缓冲区中的数据复制到 cp 处
+    (void) memcpy(cp,bh->b_data,BLOCK_SIZE);  // 将缓冲区中的数据复制到 cp 处
     brelse(bh); // 释放缓冲区
     printk("\010\010\010\010\010%4dk",i); // 打印加载块计数值
     cp+=BLOCK_SIZE; // 虚拟盘指针前移

@@ -60,7 +60,7 @@ rep_int:  # 中断标识寄存器端口是 0x3fa(0x2fa),参见上节列表后信
 	movl 24(%esp),%ecx # 再取缓冲队列地址->ecx
 	pushl %edx # 将端口号 0x3fa(0x2fa) 入栈
 	subl $2,%edx # 0x3f8(0x2f8)
-	call jmp_table(,%eax,2)  # NOTE! not *4, bit0 is 0 already 不乘 4，位 0 已是 0
+	call *jmp_table(,%eax,2)  # NOTE! not *4, bit0 is 0 already 不乘 4，位 0 已是 0
 # 上面语句是指，当有待处理中断时，al 中位 0=0，位 2-1 是中断类型，因此相当于已经将中断类型
 # 乘了 2，这里再乘 2，得到跳转表对应各中断类型地址，并跳转到那里去做相应处理
 	popl %edx  # 弹出中断标识寄存器端口号 0x3fa(或 0x2fa)

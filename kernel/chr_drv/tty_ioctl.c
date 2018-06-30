@@ -16,7 +16,7 @@ static unsigned short quotient[]={
 // 修改传输速率。参数：tty-中断对应的 tty 数据结构
 // 在除数锁存标志 DLAB(线路控制寄存器位 7)置位的情况下，通过端口 0x3f8 和 0x3f9 向 UART 分别
 // 写入波特率因子低字节和高字节
-static viud change_speed(struct tty_struct * tty){
+static void change_speed(struct tty_struct * tty){
   unsigned short port,quot;
 // 对于串口终端，其 tty 结构的读缓冲队列 data 字段存放的是串行端口号(0x3f8 或 0x2f8)
   if(!(port=tty->read_q.data))  return;
@@ -91,11 +91,11 @@ static int get_termio(struct tty_struct * tty,struct termio * termio){
 // 设置终端 termio 结构信息
 // 参数：tty-指定终端的 tty 结构指针；termio-用户数据区 termio 结构指针
 // 将用户数据区 termio 的信息复制到终端的 termios 结构中。返回 0
-static int set_termio(struct tty_struct* tty.struct termio * termio){
+static int set_termio(struct tty_struct* tty, struct termio * termio){
   int i;
   struct termio tmp_termio;
 // 首先把用户数据区中 termio 结构信息复制到临时 termio 结构中
-  for(i=0;o<(sizeof(*termio));i++)
+  for(i=0;i<(sizeof(*termio));i++)
     ((char *)&tmp_termio)[i]=get_fs_byte(i+(char*)termio);
 // 再将 termio 结构的信息复制到 tty 的 termios 结构中。目的是为了对其中模式标志的类型进行
 // 转换，即从 termio 的短整数类型转换成 termios 的长整数类型。

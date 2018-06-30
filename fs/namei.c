@@ -4,7 +4,7 @@
 
 #include <linux/sched.h>  // 调度程序头文件,定义任务结构 task_struct、初始任务 0 的数据
 #include <linux/kernel.h> // 内核头文件.含有一些内核常用函数的原形定义
-#include <linux/segment.h> // 段操作头文件。定义了有关段寄存器操作的嵌入式汇编函数。
+#include <asm/segment.h> // 段操作头文件。定义了有关段寄存器操作的嵌入式汇编函数。
 #include <linux/mm.h> // 内存管理头文件.含有一些内核常用函数的原形定义
 #include <asm/system.h> // 系统头文件.定义了设置或修改描述符/中断门等的嵌入式汇编宏
 
@@ -16,7 +16,7 @@
 
 // 访问模式宏。x 是 include/fcntl.h 第 7 行开始定义的文件访问标志。
 // 根据 x 值索引对应数值(数值表示 rwx 权限：r，w，rw，wxrwxrwx)(数值是 8 进制)。
-#define ACC_MODE(x) ("\004\002\006\377"[(x)&O+ACCMODE])
+#define ACC_MODE(x) ("\004\002\006\377"[(x)&O_ACCMODE])
 
 // comment out this line if you want names > NAME_LEN chars to be truncated.
 // Else they will be disallowed.
@@ -52,7 +52,7 @@ static int permission(struct m_inode * inode, int mask){
   else if(current->egid==inode->i_gid)
     mode>>=3;
   // 如果上面所取得的访问权限与屏蔽码相同，或者是超级用户，则返回 1，否则返回 0
-  if(((mode & masl & 0007)==mask)||suser())
+  if(((mode & mask & 0007)==mask)||suser())
     return 1;
   return 0;
 }
@@ -82,10 +82,10 @@ static int match(int len, const char * name, struct dir_entry * de){
   // %4-ecx(比较的字节长度值 len)
   __asm__("cld\n\t" // 清方向位
           "fs;repe;cmpsb\n\t" // 用户空间执行循环比较 [esi++] 和 [edi++] 操作
-        "setz %%al" // 若比较结果一样(z=0)则设置 al=1(same=eax)
+          "setz %%al" // 若比较结果一样(z=0)则设置 al=1(same=eax)
           :"=a"(same)
           :""(0),"S"((long)name),"D"((long)de->name),"c"(len)
-          :"cx","di","si");
+          );
   return same;  // 返回比较结果
 }
 
@@ -108,7 +108,7 @@ static int match(int len, const char * name, struct dir_entry * de){
 static struct buffer_head * find_entry(struct m_inode ** dir, const char * name,
               int namelen, struct dir_entry ** res_dir){
   int entries;
-  int bolock,i;
+  int block,i;
   struct buffer_head * bh;
   struct dir_entry * de;
   struct super_block * sb;
@@ -202,7 +202,7 @@ static struct buffer_head * find_entry(struct m_inode ** dir, const char * name,
 // 参数：dir-指定目录的 i 节点；name-文件名；namelen-文件名长度；
 // 返回：高速缓冲区指针；res_dir-返回的目录项结构指针；
 static struct buffer_head * add_entrty(struct m_inode * dir, const char * name,
-                int namelen, struct dir_entry ** res_d){
+                int namelen, struct dir_entry ** res_dir){
   int block,i;
   struct buffer_head * bh;
   struct dir_entry * de;
@@ -230,7 +230,7 @@ static struct buffer_head * add_entrty(struct m_inode * dir, const char * name,
   while(1){
     // 如果当前判别的目录项已经超出当前数据块，则释放该数据块，重新申请一块磁盘块 block。如果
     // 申请失败，则返回 NULL 退出。
-    if((char *)de>=BLOCK_SIZE+bh-b_data){
+    if((char *)de>=BLOCK_SIZE+bh->b_data){
       brelse(bh);
       bh=NULL;
       block=create_block(dir,i/DIR_ENTRIES_PER_BLOCK);
@@ -528,7 +528,7 @@ int sys_mknod(const char * filename, int mode, int dev){
   if(!suser())  // 如果不是超级用户，则返回访问许可出错码
     return -EPERM;
   // 如果找不到对应路径名目录的 i 节点，则返回出错码
-  if(!(dir=dir_namei(filename, &namlen, &basename)))
+  if(!(dir=dir_namei(filename, &namelen, &basename)))
     return -ENOENT;
   // 如果最顶端的文件名长度为 0，则说明给出的路径名最后没有指定文件名，释放该目录 i 节点，返回
   // 出错码，退出
@@ -550,7 +550,7 @@ int sys_mknod(const char * filename, int mode, int dev){
     return -EEXIST;
   }
   // 申请一个新的 i 节点，如果不成功，则释放目录的 i 节点，返回无空间出错码，退出
-  inode->new_inode(dir->i_dev);
+  inode=new_inode(dir->i_dev);
   if(!inode){
     iput(dir);
     return -ENOSPC;
@@ -594,7 +594,7 @@ int sys_mkdir(const char * pathname, int mode){
   if(!suser())  // 如果不是超级用户，则返回访问许可出错码
     return -EPERM;
   // 如果找不到对应路径名目录的 i 节点，则返回出错码
-  if(!(dir=dir_namei(pathname, &namlen, &basename)))
+  if(!(dir=dir_namei(pathname, &namelen, &basename)))
     return -ENOENT;
   // 如果最顶端的文件名长度为 0，则说明给出的路径名最后没有指定文件名，释放该目录 i 节点，返回出错码，
   // 退出
@@ -707,7 +707,7 @@ static int empty_dir(struct m_inode * inode){
   nr=2; // 令 nr 等于目录项序号；de指向第三个目录项
   de+=2;
   // 循环检测该目录中所有的目录项(len-2 个)，看有没有目录项的 i 节点号字段不为 0(被使用)
-  while(ne<len){
+  while(nr<len){
     // 如果该快磁盘块中的目录项已经检测完，则释放该磁盘块的高速缓冲区，读取下一块含有目录项的
     // 磁盘块。若相应块没有使用(货已经不用，如文件已经删除等)，则继续读下一块，若读不出，则出错，
     // 返回 0. 否则让 de 指向读出块的第一个目录项。
@@ -740,7 +740,7 @@ static int empty_dir(struct m_inode * inode){
 // 参数：name-目录名(路径名)
 // 返回：返回 0 表示成功，否则返回出错号
 int sys_rmdir(const char * name){
-  const chat * basename;
+  const char * basename;
   int namelen;
   struct m_inode * dir, * inode;
   struct buffer_head * bh;
@@ -787,7 +787,7 @@ int sys_rmdir(const char * name){
   // 如果要被删除的目录项的 i 节点的设备号不等于包含该目录项的目录的设备号，或者该被删除目录的
   // 引用连接计数大于 1(表示有符号连接等)，则不能删除该目录，于是释放包含要删除目录名的目录 i 节点
   // 和该要删除目录的 i 节点，释放高速缓冲区，返回出错码
-  if(iode->i_dev!=dir->i_dev||inode->i_count>1){
+  if(inode->i_dev!=dir->i_dev||inode->i_count>1){
     iput(dir);
     iput(inode);
     brelse(bh);
@@ -831,7 +831,7 @@ int sys_rmdir(const char * name){
   // 将包含被删除目录名的目录的 i 节点引用计数减 1，修改其改变时间和修改时间为当前时间，
   // 并置该节点已修改标志
   dir->i_nlinks--;
-  dir->i_ctimr=dir->i_mtimr=CURRENT_TIME;
+  dir->i_ctime=dir->i_mtime=CURRENT_TIME;
   dir->i_dirt=1;
   // 最后释放班汉要删除目录名的目录 i 节点和要删除目录的 i 节点，返回 0(成功)
   iput(dir);
@@ -844,7 +844,7 @@ int sys_rmdir(const char * name){
 // 被删除，并释放所占用的设备空间
 // 参互：name-文件名。
 // 返回：成功则返回 0，否则返回出错号
-int sys_unlink(const chat * name){
+int sys_unlink(const char * name){
   const char * basename;
   int namelen;
   struct m_inode * dir, * inode;
@@ -872,7 +872,7 @@ int sys_unlink(const chat * name){
     return -ENOENT;
   }
   // 取该目录项指明的 i 节点。若出错则释放目录 i 节点，并释放含有目录项的高速缓冲，返回出错号。
-  if(!(inode=iget(dir0>i_dev, de->inode))){
+  if(!(inode=iget(dir->i_dev, de->inode))){
     iput(dir);
     brelse(bh);
     return -EPERM;
@@ -908,7 +908,7 @@ int sys_unlink(const chat * name){
 // 系统调用函数-为文件建立一个文件名。唯一存在文件建一个新连接(也称硬连接-hard link)
 // 参数：oldname-原路径名；newname-新的路径名。
 // 返回：若成功则返回 0，否则返回出错号。
-int sys_link(const chat * oldname, const chat * newname){
+int sys_link(const char * oldname, const char * newname){
   struct dir_entry * de;
   struct m_inode * oldinode, * dir;
   struct buffer_head * bh;
@@ -939,7 +939,7 @@ int sys_link(const chat * oldname, const chat * newname){
   // 如果新路径名目录的设备号与原路径名的设备号不一样，则也不能建立连接，于是释放新路径名目录
   // 的 i 节点和原路径名的 i 节点，返回出错号
   if(dir->i_dev!=oldinode->i_dev){
-    iput(dir)
+    iput(dir);
     iput(oldinode);
     return -EXDEV;
   }

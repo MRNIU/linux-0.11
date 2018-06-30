@@ -29,7 +29,7 @@
  * 时间中断等。
  * 另外，我不能保证该程序能在多于 1 个软驱的系统上工作，有可能存在错误。
  */
-#include <linux/sched.h.>  // 调度程序头文件，定义任务结构 task_struct、初始任务 0 的数据
+#include <linux/sched.h>  // 调度程序头文件，定义任务结构 task_struct、初始任务 0 的数据
 #include <linux/fs.h>  // 文件头文件。定义文件表结构(file,buffer_head,m_inode 等)
 #include <linux/kernel.h>  // 内核头文件。含有一些内核常用函数的原形定义。
 #include <linux/fdreg.h> // 软驱头文件。含有软盘控制器参数的一些定义
@@ -47,8 +47,8 @@ static int seek=0; // 寻道
 
 extern unsigned char current_DOR;  // 当前数字输出寄存器(digital Output Register)
 
-#define immoutb_p(val,port)\ // 字节直接输入(嵌入汇编语言宏)
-__asm__("outb %0,%1\n\tjmp 1f\n1:\tjmp 1f\n1:"::"a"((char)(val)),"i"(port))
+#define immoutb_p(val,port) \
+__asm__("outb %0,%1\n\tjmp 1f\n1:\tjmp 1f\n1:"::"a" ((char) (val)),"i"(port))
 // 这两个定义用于计算软驱的设备号。次设备号=TYPE*4+DRIVE。计算方法参见程序后。
 #define TYPE(x) ((x)>>2) // 软驱类型(2---1.2 MB,7---1.44 MB)
 #define DRIVE(x) ((x)&0x03)  // 软驱序号(0~3 对应 A~D)
@@ -94,7 +94,7 @@ static unsigned char reply_buffer[MAX_REPLIES];  // 存放 FDC 返回的结果�
 static struct floppy_struct{
  	unsigned int size,sect,head,track,stretch;
  	unsigned char gap,rate,spec1;
-}floppy_type[]=
+}floppy_type[]={
  	{0,0,0,0,0,0x00,0x00,0x00},	// no testing
  	{720,9,2,40,0,0x2A,0x02,0xDF},	// 360kB PC diskettes
  	{2400,15,2,80,0,0x1B,0x00,0xDF},	// 1.2 MB AT-diskettes
@@ -180,7 +180,7 @@ repeat:
 #define copy_buffer(from,to)\
 __asm__("cld ; rep ; movsl"\
         ::"c" (BLOCK_SIZE/4),"S" ((long)(from)),"D" ((long)(to))\
-        :"cx","di","si")
+        )
 // 设置(初始化)软盘 DMA 通道
 static void setup_DMA(void){
  	long addr = (long) CURRENT->buffer; // 当前请求项缓冲区所处内存中位置(地址)

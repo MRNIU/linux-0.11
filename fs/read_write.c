@@ -9,7 +9,7 @@
 extern int rw_char(int rw, int dev, char * buf, int count, off_t * pos);  // 字符设备读写函数
 extern int read_pipe(struct m_inode * inode, char * buf, int count);  // 读管道操作函数
 extern int write_pipe(struct m_inode * inode, char * buf, int count); // 写管道操作函数
-extern int block_read(int dev, unsigned long * posm char * buf, int count); // 块设备读操作函数
+extern int block_read(int dev, unsigned long * posm, char * buf, int count); // 块设备读操作函数
 extern int block_write(int dec, long * pos, char * buf, int count); // 块设备写操作函数
 extern int file_read(struct m_inode * inode, struct file * filp, char * buf, int count);  // 读文件操作函数
 extern int file_write(struct m_inode * inode, struct file * filp, char * buf, int count); // 写文件操作函数
@@ -17,7 +17,7 @@ extern int file_write(struct m_inode * inode, struct file * filp, char * buf, in
 // 重定位文件读写指针系统调用函数
 // 参数 fd 是文件句柄，offset 是新的文件读写指针偏移值，origin 是偏移的起始位置，是 SEEK_SET(0,
 // 从文件开始处)、SEEK_CUR(1，从当前读写位置)、SEEK_END(2，从文件尾处)三者之一。
-int sys_lseek(unsigned inf fd, off_t offset, int origin){
+int sys_lseek(unsigned int fd, off_t offset, int origin){
   struct file * file;
   int tmp;
   // 如果文件句柄值大于程序最多打开文件数 NR_OPEN(20)，或者该句柄的文件结构指针为空，
@@ -38,7 +38,7 @@ int sys_lseek(unsigned inf fd, off_t offset, int origin){
     // origin=SEEL_CUR，要求以文件当前读写指针处作为原点重定位读写指针，如果文件当前指针加上
     // 偏移值小于 0，则返回出错码退出。否则在当前读写指针上加上偏移值
     case 1:
-      if(file->f_pos+offswr<0)  return -EINVAL;
+      if(file->f_pos+offset<0)  return -EINVAL;
       file->f_pos+=offset;
       break;
     // origin=SEEK_END，要求以文件末尾作为原点重定位读写指针。此时若文件大小加上偏移值小于 0，
@@ -67,9 +67,9 @@ int sys_read(unsigned int fd, char * buf, int count){
   verify_area(buf, count);  // 验证存放数据的缓冲区内存限制
   // 取文件对应的 i 节点。若是管道文件，并且是读管道文件模式，则进行读管道操作，若成功则返回读取的
   // 字节数，否则返回出错码，退出
-  inode->file->f_inode;
+  inode=file->f_inode;
   if(inode->i_pipe)
-    return (file->f_model &1)? read_pipe(inode, buf, count):-EIO;
+    return (file->f_mode &1)? read_pipe(inode, buf, count):-EIO;
   // 如果是字符型文件，则进行读字符设备操作，返回读取的字节数。
   if(S_ISCHR(inode->i_mode))
     return rw_char(READ, inode->i_zone[0], buf, count, &file->f_pos);

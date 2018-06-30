@@ -12,7 +12,7 @@
 // 并处理的。另外没因为设备是以块为单位进行读写的，因此对于写开始位置不处于块起始处时，需要先将
 // 开始字节所在的整个块读出，然后将需要写的数据从开始处填写满该块，再将完整的一块数据写盘(即交由
 // 高速缓冲程序去处理)
-int block_write(int dec, long * pos, char * buf, int count){
+int block_write(int dev, long * pos, char * buf, int count){
   // 由 pos 地址换算成开始读写块的块序号 block。并求出需读第 1 字节在该块中的偏移位置 offset。
   int block=*pos>>BLOCK_SIZE_BITS;
   int offset=*pos&(BLOCK_SIZE-1);
@@ -55,9 +55,9 @@ int block_write(int dec, long * pos, char * buf, int count){
 }
 
 // 数据块读函数-从指定设备和位置读入指定字节数的数据到高速缓冲中
-int block_read(int dev, unsigned long * posm char * buf, int count){
+int block_read(int dev, unsigned long * pos, char * buf, int count){
   // 由 pos 地址换算成开始读写块的块序号 block。并求出需读第 1 字节在该块中的偏移位置 offset
-  int block=*pos>>BLOCK;
+  int block=*pos>>BLOCK_SIZE_BITS;
   int offset=*pos&(BLOCK_SIZE-1);
   int chars;
   int read=0;

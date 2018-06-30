@@ -142,10 +142,10 @@ static unsigned long copy_strings(int argc, char **argv, unsigned long *page,
 	new_fs = get_ds();
   old_fs = get_fs();
 	// 如果字符串和字符串数组来自内核空间，则设置fs 段寄存器指向内核数据段（ds）。
-	if from_kmem == 2)
+	if(from_kmem == 2)
 	  set_fs(new_fs);
 	// 循环处理各个参数，从最后一个参数逆向开始复制，复制到指定偏移地址处。
-  while (argc-- > 0){
+  while(argc-- > 0){
 	// 如果字符串在用户空间而字符串数组在内核空间，则设置 fs 段寄存器指向内核数据段(ds).
 		if(from_kmem == 1)
 			set_fs(new_fs);
@@ -180,8 +180,9 @@ static unsigned long copy_strings(int argc, char **argv, unsigned long *page,
 				// 如果当前偏移值 p 所在的串空间页面指针数组项 page[p/PAGE_SIZE]==0，表示相应页面还不存在，
 				// 则需申请新的内存空闲页面，将该页面指针填入指针数组，并且也使 pag 指向该新页面，若申请不
 				// 到空闲页面则返回 0。
-				if(!(pag=(char *)page[p/ PAGE_SIZE]) &&!(pag=(char *)page[p/ PAGE_SIZE]=
-			    (unsigned long *)get_free_page()))
+				if(!(pag = (char *) page[p/PAGE_SIZE]) &&
+					 !(pag = (char *) (page[p/PAGE_SIZE] =
+						 get_free_page())))
 					return 0;
 				// 如果字符串和字符串数组来自内核空间，则设置 fs 段寄存器指向内核数据段 (ds)。
 				if(from_kmem == 2)

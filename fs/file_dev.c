@@ -114,5 +114,5 @@ int file_write(struct m_inode * inode, struct file * filp, char * buf, int count
     filp->f_pos=pos;
     inode->i_ctime=CURRENT_TIME;
   }
-  return (i? i:-1)  // 返回写入的字节数，若写入字节数为 0，则返回出错号 -1.
+  return (i? i:-1);  // 返回写入的字节数，若写入字节数为 0，则返回出错号 -1.
 }

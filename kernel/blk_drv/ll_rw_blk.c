@@ -39,7 +39,7 @@ struct blk_dev_struct blk_dev[NR_BLK_DEV]={
 };
 // 锁定指定的缓冲区 bh。如果指定的缓冲区已经被其它任务锁定，则是自己睡眠(不可中断地等待)，直到
 // 被执行解锁缓冲区的任务明确地唤醒
-static inline void lock_buffer(Struct buffer_head * bh){
+static inline void lock_buffer(struct buffer_head * bh){
   cli();  // 清中断许可
   while(bh->b_lock) // 如果缓冲区已经被锁定，则睡眠，直到缓冲区解锁
     sleep_on(&bh->b_wait);
@@ -48,7 +48,7 @@ static inline void lock_buffer(Struct buffer_head * bh){
 }
 // 释放(解锁)锁定的缓冲区
 static inline void unlock_buffer(struct buffer_head * bh){
-  if(!bh->n_lock) // 如果该缓冲区并没有被锁定，则打印出错信息
+  if(!bh->b_lock) // 如果该缓冲区并没有被锁定，则打印出错信息
     printk("ll_rw_block.c: buffer not locked\n\r");
   bh->b_lock=0; // 清锁定标志
   wake_up(&bh->b_wait); // 唤醒等待该缓冲区的任务

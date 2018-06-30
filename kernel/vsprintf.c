@@ -56,7 +56,7 @@ static char * number(char * str,int num,int base,int size,int precision,int type
 // 若带符号，则宽度值减 1.若类型指出是特殊转换，则对于十六进制宽度再减少 2 位(用于 0x)，对于
 // 八进制宽度减 1 (用于八进制转换结果)
   if(sign) size--;
-  if(typr & SPECIAL)
+  if(type & SPECIAL)
     if(base==16) size-=2;
     else if(base==8) size--;
 // 如果数值 num 为 0，则临时字符串='0'；否则根据给定的基数将数值 num 转换成字符形式
@@ -78,7 +78,7 @@ static char * number(char * str,int num,int base,int size,int precision,int type
 // 若类型指出是特殊转换，则对于八进制转换结果头一位放置一个 '0';而对于十六进制则存放 '0x'.
   if(type & SPECIAL)
     if(base==8)
-      *str++='0'
+      *str++='0';
     else if(base==16){
       *str++='0';
       *str++=digits[33];  // 'X' 或 'x'
@@ -131,7 +131,7 @@ int vsprintf(char * buf,const char * fmt,va_list args){
         case '+': flags|=PLUS;  goto repeat;  // 放加号
         case ' ': flags|=SPACE; goto repeat;  // 放空格
         case '#': flags|=SPECIAL; goto repeat;  // 是特殊转换
-        case '':  flags|=ZEROPAD; goto repeat;  //要填零(即 ‘0’)
+        case '0':  flags|=ZEROPAD; goto repeat;  //要填零(即 ‘0’)
       }
 // 去参数字段宽度阈值放入 field_width 变量中。若宽度域中是数值则直接取其为宽度值。若宽度域是
 // 字符 '*' ，表示下一参数指定宽度，调用 va_arg 取宽度值。若此时宽度值 < 0，则该负数表示其带有
@@ -159,7 +159,7 @@ int vsprintf(char * buf,const char * fmt,va_list args){
         precision=skip_atoi(&fmt);
       else if(*fmt=='*'){
         // it's the next argument
-        precision=va_arg(aegs,int);
+        precision=va_arg(args,int);
       }
       if(precision<0)
         precision=0;

@@ -8,7 +8,7 @@
 #include<asm/segment.h> // 段操作头文件。定义了有关段寄存器操作的嵌入式汇编函数。
 
 int sys_pause(void);
-int sys_close(void);
+int sys_close(int fd);
 // 释放指定进程(任务)。释放任务槽及任务数据结构所占用的内存。
 void release(struct task_struct *p){
   int i;
@@ -17,7 +17,7 @@ void release(struct task_struct *p){
   for(i=1;i<NR_TASKS;i++) // 扫描任务数组，寻找指定任务
     if(task[i]==p){
       task[i]=NULL; // 置空该任务项并释放相关内存页
-      free_page(long)p);
+      free_page((long)p);
       schedule(); // 重新调度
       return;
     }
@@ -54,7 +54,7 @@ static void kill_session(void){
 // 若 pid 值>0,则信号被发送给 pid；若 pid=0，那么信号就会被发送给当前进程俎中的所有进程；若
 // pid=-1 ，则信号 sig 就会发送给除第一个进程外的所有进程；若 pid<-1 ，则信号 sig 将发送给
 // 进程组 -pid 的所有进程；若信号 sig 为 0，则不发送信号，但仍会进行错误检查。若成功则返回 0.
-int sys_kill(int pid,ing sig){
+int sys_kill(int pid,int sig){
   struct task_struct **p=NR_TASKS+task;
   int err,retval=0;
 
@@ -65,8 +65,8 @@ int sys_kill(int pid,ing sig){
           retval=err;
   }
   else if(pid>0)
-    while(--p>FIRST_TASK){
-      if(*p&&(*p)->pid==pid)
+    while(--p> &FIRST_TASK){
+      if(*p && (*p)->pid==pid)
         if(err=send_sig(sig,*p,0))
           retval=err;
     }

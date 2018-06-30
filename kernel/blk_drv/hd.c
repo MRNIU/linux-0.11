@@ -10,7 +10,7 @@
  * 由 Drew Eckhardt 修改，利用 CMOS 信息检测硬盘数。
  */
 #include <linux/config.h>  // 内核配置头文件。定义键盘语言和硬盘类型(HD_TYPE)可选项
-#include <linux/sched.h.>  // 调度程序头文件，定义任务结构 task_struct、初始任务 0 的数据
+#include <linux/sched.h>  // 调度程序头文件，定义任务结构 task_struct、初始任务 0 的数据
 #include <linux/fs.h>  // 文件系统头文件。定义文件表结构(file,buffer_head,m_inode 等)
 #include <linux/kernel.h>  // 内核头文件。含有一些内核常用函数的原形定义。
 #include <linux/hdreg.h> // 硬盘参数头文件。定义访问硬盘寄存器端口，状态码，分区表等信息。
@@ -21,7 +21,7 @@
 #define MAJOR_NR 3 // 硬盘主设备号是 3，必须在包含进 blk.h 文件之前定义
 #include "blk.h" // 块设备头文件。定义请求数据结构、块设备数据结构和宏函数等信息。
 
-#define CMOS_READ(addr)({\  // 读 CMOS 参数宏函数
+#define CMOS_READ(addr)({\
 outb_p(0x80|addr,0x70);\
 inb_p(0x71);\
 })
@@ -58,11 +58,11 @@ static struct hd_struct{
   long nr_sects;
 }hd[5*MAX_HD]={{0,0},};
 // 读端口 port,共读 nr 字，保存在 buf 中
-#define port_read(port,buf,nr)\
-__asm__("cld;rep;insw"::"d"(port),"D"(buf),"c"(nr):"cx","di")
-// 写端口 port，共写 nr 字，从 buf 中取数据
-#define port_write(port,buf,nr)\
-__asm__("cld;rep;outsw"::"d"(port),"S"(buf),"c"(nr):"cx","si")
+#define port_read(port,buf,nr) \
+__asm__("cld;rep;insw"::"d" (port),"D" (buf),"c" (nr))
+
+#define port_write(port,buf,nr) \
+__asm__("cld;rep;outsw"::"d" (port),"S" (buf),"c" (nr))
 
 extern void hd_interrupt(void);
 extern void rd_load(void);
@@ -155,7 +155,7 @@ int sys_setup(void * BIOS){
       printk("Bad partition table on drive %d\n\r",drive);
       panic("");
     }
-    p=0x1BE+(void *)bh->b_data);  // 分区表位于硬盘第 1 扇区的 0x1BE 处
+    p=0x1BE + (void *)bh->b_data;  // 分区表位于硬盘第 1 扇区的 0x1BE 处
     for(i=1;i<5;i++,p++){
       hd[i+5*drive].start_sect=p->start_sect;
       hd[i+5*drive].nr_sects=p->nr_sects;
@@ -192,7 +192,7 @@ static int win_result(void){
 // 调用参数：drive-硬盘号(0-1);nsect-读写扇区数；sect-起始扇区；head-磁头号；cyl-柱面号；
 // cmd-命令码；* intr_addr() 硬盘中断处理程序中将调用的 C 处理函数。
 static void hd_out(unsigned int drive,unsigned int nsect,unsigned int sect,
-  unsigned int head,unsigned int cyl,unsigned int cmd,coid(* intr_addr)(void)){
+  unsigned int head,unsigned int cyl,unsigned int cmd,void(* intr_addr)(void)){
     register int port asm("dx");  // port 变量对应寄存器 dx
 
     if(drive>1||head>15)  // 如果驱动器号(0,1)>1 或磁头号>15,则程序不支持。
@@ -240,9 +240,9 @@ static void reset_controller(void){
 // 复位硬盘 ne。首先复位(重新校正)硬盘控制器。然后发送硬盘控制器指令“建立驱动器参数”，
 // 其中 recal_intr() 是在硬盘中断处理程序中调用的重新校正处理函数。
 static void reset_hd(int nr){
-  reset_controller();
-  hd_out(nr,hd_info[nr].sect,hd_info[nr].sect，hd_info[nr].head-1,hd_info[nr].cyl,
-          WIN_SPECIFY,&recal_intr);
+	reset_controller();
+	hd_out(nr,hd_info[nr].sect,hd_info[nr].sect,hd_info[nr].head-1,
+		hd_info[nr].cyl,WIN_SPECIFY,&recal_intr);
 }
 // 意外硬盘中断调用函数
 // 发生意外硬盘中断时，硬盘中断处理程序中调用的默认 C 处理函数。在被调用函数指针为空时调用该函数

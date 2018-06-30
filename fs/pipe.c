@@ -34,7 +34,7 @@ int read_pipe(struct m_inode * inode, char * buf, int count){
     PIPE_TAIL(*inode)&=(PAGE_SIZE-1);
     // 将管道中的数据复制到用户缓冲区中。对于管道 i 节点，其 i_size 字段中是管道缓冲块指针。
     while(chars-->0)
-      puts_fs_byte(((chars *)inode->i_size)[size++], buf++);
+      puts_fs_byte(((char *)inode->i_size)[size++], buf++);
   }
   wake_up(&inode->i_wait);  // 唤醒等待该管道 i 节点的进程，并返回读取的字符串。
   return read;
@@ -97,7 +97,7 @@ int sys_pipe(unsigned long * fildes){
     return -1;
   // 针对上面取得的两个文件结构项，分别匹配一文件句柄，并使进程的文件结构指针分别指向这两个文件结构
   j=0;
-  for(i=0lj<2 && i<NR_OPEN;i++)
+  for(i=0;j<2 && i<NR_OPEN;i++)
     if(!current->filp[i]){
       current->filp[fd[j]=i]=f[j];
       j++;
@@ -113,7 +113,7 @@ int sys_pipe(unsigned long * fildes){
     // 和文件结构项，并返回 -1.
     if(!(inode=get_pipe_inode())){
       current->filp[fd[0]]=current->filp[fd[1]]=NULL;
-      fd[0]->f_count=f[1]->f_count=0;
+      f[0]->f_count=f[1]->f_count=0;
       return -1;
     }
     // 初始化两个文件结构，都指向同一个 i 节点，读写指针都置零。第 1 个文件结构的文件模式置为

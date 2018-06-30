@@ -81,7 +81,7 @@ int sys_time(long *tloc){
   i=CURRENT_TIME;
   if(tloc){
     verify_area(tloc,4);  // 验证内存容量是否足够(这里是 4 字节)
-    put_fs_long(i,(unsigned long *(tloc); // 也放入用户数据段 tloc 处
+    put_fs_long(i,(unsigned long *)tloc); // 也放入用户数据段 tloc 处
   }
   return i;
 }

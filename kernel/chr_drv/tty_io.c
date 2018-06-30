@@ -37,7 +37,7 @@
 #define L_ECHOKE(tty) _L_FLAG((tty),ECHOKE) // 规范模式时，取 KILL 擦除行并回显标志位
 
 // 取 termios 结构中输入模式标志中的一个标志位
-#define I_UCLC(tty) _I_FLAG((tty),UCLC) // 取输入模式标志集中大小写转换标志位
+#define I_UCLC(tty) _I_FLAG((tty),IUCLC) // 取输入模式标志集中大小写转换标志位
 #define I_NLCR(tty) _I_FLAG((tty),INLCR)  // 取换行符 NL 转回车符 CR 标志位
 #define I_CRNL(tty) _I_FLAG((tty),ICRNL)  // 取回车符 CR 转换行符 NL 标志位
 #define I_NOCR(tty) _I_FLAG((tty),IGNCR)  // 取忽略回车符 CR 标志位
@@ -98,10 +98,10 @@ struct tty_struct tty_table[]={
 // 下面是汇编程序使用的缓冲队列地址列表。通过修改你可以实现伪 tty 终端或其它终端类型。目前还没有这样做。
 // tty 缓冲队列地址表。rs_io.s 汇编程序使用，用于取得写缓冲队列地址
 struct tty_queue * table_list[]={
-  &tty_table[0].read_q.&tty_table[0].write_q, // 控制台终端读、写缓冲队列地址
-  &tty_table[1].read_q.&tty_table[1].write_q, // 串行口 1 终端读、写缓冲队列地址
-  &tty_table[2].read_q.&tty_table[2].write_q, // 串行口 2 终端读、写缓冲队列地址
-}
+  &tty_table[0].read_q,&tty_table[0].write_q, // 控制台终端读、写缓冲队列地址
+  &tty_table[1].read_q,&tty_table[1].write_q, // 串行口 1 终端读、写缓冲队列地址
+  &tty_table[2].read_q,&tty_table[2].write_q // 串行口 2 终端读、写缓冲队列地址
+};
 
 // tty 终端初始化函数。吃实话串口终端和控制台终端
 void tty_init(void){
@@ -189,7 +189,7 @@ void copy_to_cooked(struct tty_struct * tty){
 // 如果该字符是删除控制字符 ERASE(^H),那么：
         if(c==ERASE_CHAR(tty)){
 // 若 tty 辅助队列为空，或其最后一字符是换行符 NL(10),或是文件结束符，则继续处理其它字符。
-          if(EMPTY(tty->secondary)||(c=LAST(tty->secondary))=10||c==EOF_CHAR(tty))
+          if(EMPTY(tty->secondary)||(c=LAST(tty->secondary))==10||c==EOF_CHAR(tty))
             continue;
 // 如果本地回显标志 ECHO 置位，那么：若字符是控制字符(值 <32)，则往 tty 的写队列中放入擦除
 // 字符 ERASE. 再放入一个擦除字符 ERASE,并且调用该 tty 的写函数。
@@ -244,7 +244,7 @@ void copy_to_cooked(struct tty_struct * tty){
             PUTCH(c+64,tty->write_q);
           }
         }else PUTCH(c,tty->write_q);
-        tty->write(yyt);
+        tty->write(tty);
       }
       PUTCH(c,tty->secondary);  // 将该字符放入辅助队列中
   }
@@ -281,8 +281,8 @@ int tty_read(unsigned channel,char * buf,int nr){
   while(nr>0){  // 当欲读的字节数>0,则循环执行以下操作
 // 如果 flag 不为 0，(即进程原定时值是 0 或者 time+ 当前系统时间值小于进程原定时值)并且进程有
 // 定时信号 SIGALRM,则复位进程的定时信号并中断循环。
-    if(flag&&(current->signal&ALARMMASK)){
-      current->signal&=~ALARMMASK;
+    if(flag&&(current->signal&ALRMMASK)){
+      current->signal&=~ALRMMASK;
       break;
     }
     if(current->signal) break;  // 如果当前进程有信号要处理，则退出，返回 0

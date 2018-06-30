@@ -4,7 +4,7 @@
 #include <linux/kernel.h> // 内核头文件.含有一些内核常用函数的原型定义
 #include <asm/system.h> // 系统头文件.定义了设置或修改描述符/中断门等的嵌入式汇编宏
 
-#include <error.h>  // 错误号头文件.包含系统中各种出错号(linus 从 MINIX 中引进的)
+#include <errno.h>  // 错误号头文件.包含系统中各种出错号(linus 从 MINIX 中引进的)
 #include <sys/stat.h> // 文件状态头文件.含有文件或文件系统状态结构 stat{} 和常量
 
 int sync_dev(int dev);  // 对指定设备执行告诉缓冲与设备上数据的同步操作(fs/buffer.c 59)
@@ -14,10 +14,10 @@ void wait_for_keypress(void); // 等待击键(kernel/chr_drv/tty_io.c 145)
 // 测试指定位偏移处比特位的值(0 或 1),并返回该比特位值.(应该取名为 test_bit() 更妥帖)
 // 嵌入式汇编宏.参数 bitnr 是比特位偏移值,addr 是测试比特位操作的起始地址
 // %0-ax(__res),%1-0,%2-bitnr,%3-addr
-#define set_bit(bitnr,addr)({\
-register int __res __asm__("ax");\
-__asm__("bt %2,%3;setb %%al":"a"(__res):"a"(0),"r"(bitnr),"m"(*(addr)));\
-__res;})
+#define set_bit(bitnr,addr) ({ \
+register int __res ; \
+__asm__("bt %2,%3;setb %%al":"=a" (__res):"a" (0),"r" (bitnr),"m" (*(addr))); \
+__res; })
 
 struct super_block super_block[NR_SUPER]; // 超级块结构数组(共 8 项)
 // this is initialized in init/main.c
@@ -129,7 +129,7 @@ static struct super_block * read_super(int dev){
     return NULL;
   }
 // 将设备上读取的超级块信息复制到超级块数组相应项结构中.并释放存放读取信息的高速缓冲区块.
-  *((struct d_super_block *(s)=*((struct d_super_block *)bh->b_data);
+  *((struct d_super_block *)s)=*((struct d_super_block *)bh->b_data);
   brelse(bh);
 // 如果读取的超级块的文件系统魔数字段内容不对,说明设备上不是正确的文件系统,因此同上面一样,
 // 释放上面选定的超级块数组中的项,并解锁该项,返回空指针退出.对于该版 Linux 内核,只支持 MINIX
@@ -197,7 +197,7 @@ int sys_umount(char * dev_name){
 // 置超级块中被安装 i 节点字段为空,并释放设备文件系统的根 i 节点,置超级块中被安装系统根 i 节点指针为空.
   sb->s_imount=NULL;
   iput(sb->s_isup);
-  sb->s_isup-NULL;
+  sb->s_isup=NULL;
 // 释放该设备的超级块以及位图占用的缓冲块,并对该设备执行高速缓冲与设备上数据的同步操作.
   put_super(dev);
   sync_dev(dev);
@@ -285,7 +285,7 @@ void mount_root(void){
 // 置该超级块的被安装文件系统 i 节点和被安装到的 i 节点为该 i 节点
   p->s_isup=p->s_imount=mi;
 // 设置当前进程的当前工作目录和根目录 i 节点.此时当前进程是 1 号进程
-  current->ped=mi;
+  current->pwd=mi;
   current->root=mi;
 // 统计该设备上空闲块数.首先令 i 等于超级块中表明的设备逻辑总块数
   free=0;

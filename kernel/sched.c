@@ -8,7 +8,7 @@
  */
 #include<linux/sched.h> // 调度程序头文件。定义了任务结构 task_struct 等进程数据和函数
 #include<linux/kernel.h>  // 内核头文件。含有一些内核常用函数的原形定义。
-#include<linux/sys,h> // 系统调用头文件。含有 72 个系统调用 C 函数处理程序，以 'sys_' 开头
+#include<linux/sys.h> // 系统调用头文件。含有 72 个系统调用 C 函数处理程序，以 'sys_' 开头
 #include<linux/fdreg.h> // 软驱头文件。含有软盘控制器参数的一些定义。
 #include<asm/system.h>  // 系统头文件。定义了设置或修改描述符/中断门等的嵌入式汇编宏
 #include<asm/io.h>  // io 头文件。定义硬件端口输入/输出宏汇编语句
@@ -38,7 +38,7 @@ void show_stat(void){
       show_task(i,task[i]);
 }
 // 设置定时芯片 8253 的计数初值，参见 432 行
-#define LATCH (1193180/Hz)
+#define LATCH (1193180/HZ)
 
 extern void mem_use(void);  // 没有任何地方定义和引用该函数
 
@@ -136,7 +136,7 @@ void schedule(void){
 // 这段代码也是从任务数组最后任务开始循环处理，并跳过不含任务的槽。比较每个就绪状态任务的 counter
 // (任务运行时间的递减计数)值，哪个值大，运行时间还不长，next 就指向哪个任务号。
     while(--i){
-      if(!*--p))
+      if(!*--p)
         continue;
       if((*p)->state==TASK_RUNNING && (*p) -> counter>c)
         c=(*p)->counter,next=i;
@@ -170,7 +170,7 @@ void sleep_on(struct task_struct * * p){
     panic("task[0] trying to sleep");
   tmp=*p; // 让 tmp 指向已经在等待队列上的任务(如果有的话)
   *p=current; // 将睡眠队列头的等待指针指向当前任务。
-  current=->state=TASK_UNINTERRUPTIBLE; // 将当前任务置为不可中断的等待状态
+  current->state=TASK_UNINTERRUPTIBLE; // 将当前任务置为不可中断的等待状态
   schedule(); // 重新调度
 // 只有当这个等待任务被唤醒时，调度程序才又返回到这里，则表示进程已被明确地唤醒。既然大家都在等待
 // 相同的资源，那么在资源可用时，就有必要唤醒所有等待该资源的进程。该函数嵌套调用，也会嵌套唤醒
@@ -230,7 +230,7 @@ int ticks_to_floppy_on(unsigned int nr){
   moff_timer[nr]=10000; // 100 s =very big :-)
   cli();
   mask|=current_DOR;
-  if(*selected){  // 若非当前软驱，则先复位其它软驱选择位，然后置对应软驱选择位
+  if(!selected){  // 若非当前软驱，则先复位其它软驱选择位，然后置对应软驱选择位
     mask&=0xFC;
     mask|=nr;
   }
@@ -266,7 +266,7 @@ void do_floppy_timer(void){
   int i;
   unsigned char mask=0x10;
 
-  for(i=0;i<4;i++.mask<<=1){
+  for(i=0;i<4;i++,mask<<=1){
     if(!(mask & current_DOR)) // 如果不是 DOR 指定的电动机则跳过
       continue;
     if(mon_timer[i]){
@@ -366,7 +366,7 @@ int sys_alarm(long seconds){
 
   if(old)
     old=(old-jiffies)/HZ;
-  current->alarm=(seconds>0)?(jiffies+HZ(seconds):0);
+  current->alarm=(seconds>0)?(jiffies+HZ*seconds):0;
   return(0);
 }
 // 取当前进程号 pid
@@ -407,8 +407,8 @@ void sched_init(void){
   if(sizeof(struct sigaction)!=16)  // sigaction 是存放有关信号状态的结构
     panic("Struct sigaction MUST be 16 bytes");
 // 设置初始任务(任务 0)的任务状态段描述符和局部数据表描述符(include/asm/system.h,2222)
-  set_tss_desc(gdt+FIRST_TSS_ENTRY,&(init_task.task.ass));
-  set_ldt_desc(ldt+FIRST_LDT_ENTRY,&(init_task.task.ldt));
+  set_tss_desc(gdt+FIRST_TSS_ENTRY,&(init_task.task.tss));
+  set_ldt_desc(gdt+FIRST_LDT_ENTRY,&(init_task.task.ldt));
 // 清任务数组和描述符表项(注意 i=1 开始，所以出事任务的描述符还在)。
   p=gdt+2+FIRST_TSS_ENTRY;
   for(i=1;i<NR_TASKS;i++){
@@ -430,7 +430,7 @@ void sched_init(void){
 // 下面代码用于初始化 8253 定时器
   outb_p(0x36,0x43);  // binary,mode 3,LSB/MSB.ch 0
   outb_p(LATCH & 0xff,0x40);  // LSB  定时值低字节
-  outb_p(LATCH>>8,0x40);  // MSB  定时值高字节
+  outb(LATCH>>8,0x40);  // MSB  定时值高字节
   set_intr_gate(0x20,&timer_interrupt); // 设置时钟中断处理句柄(设置时钟中断门)
   outb(inb_p(0x21)&~0x01,0x21); // 修改中断控制器屏蔽码，允许时钟中断
   set_system_gate(0x80,&system_call); // 设置系统调用中断门

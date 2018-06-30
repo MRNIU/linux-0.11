@@ -1,6 +1,6 @@
 /*
  * malloc.c --- a general purpose kernel memory allocator for Linux.
- * 
+ *
  * Written by Theodore Ts'o (tytso@mit.edu), 11/29/91
  *
  * This routine is written to be as fast as possible, so that it
@@ -15,14 +15,14 @@
  * called, it looks for the smallest bucket size which will fulfill its
  * request, and allocate a piece of memory from that bucket pool.
  *
- * Each bucket has as its control block a bucket descriptor which keeps 
+ * Each bucket has as its control block a bucket descriptor which keeps
  * track of how many objects are in use on that page, and the free list
  * for that page.  Like the buckets themselves, bucket descriptors are
  * stored on pages requested from get_free_page().  However, unlike buckets,
  * pages devoted to bucket descriptor pages are never released back to the
  * system.  Fortunately, a system should probably only need 1 or 2 bucket
  * descriptor pages, since a page can hold 256 bucket descriptors (which
- * corresponds to 1 megabyte worth of bucket pages.)  If the kernel is using 
+ * corresponds to 1 megabyte worth of bucket pages.)  If the kernel is using
  * that much allocated memory, it's probably doing something wrong.  :-)
  *
  * Note: malloc() and free() both call get_free_page() and free_page()
@@ -36,11 +36,11 @@
  *	"pre-allocated" so that it can safely draw upon those pages if
  * 	it is called from an interrupt routine.
  *
- * 	Another concern is that get_free_page() should not sleep; if it 
- *	does, the code is carefully ordered so as to avoid any race 
- *	conditions.  The catch is that if malloc() is called re-entrantly, 
- *	there is a chance that unecessary pages will be grabbed from the 
- *	system.  Except for the pages for the bucket descriptor page, the 
+ * 	Another concern is that get_free_page() should not sleep; if it
+ *	does, the code is carefully ordered so as to avoid any race
+ *	conditions.  The catch is that if malloc() is called re-entrantly,
+ *	there is a chance that unecessary pages will be grabbed from the
+ *	system.  Except for the pages for the bucket descriptor page, the
  *	extra pages will eventually get released back to the system, though,
  *	so it isn't all that bad.
  */
@@ -64,7 +64,7 @@ struct _bucket_dir {	/* 8 bytes */
 
 /*
  * The following is the where we store a pointer to the first bucket
- * descriptor for a given size.  
+ * descriptor for a given size.
  *
  * If it turns out that the Linux kernel allocates a lot of objects of a
  * specific size, then we may want to add that specific size to this list,
@@ -98,7 +98,7 @@ static inline void init_bucket_desc()
 {
 	struct bucket_desc *bdesc, *first;
 	int	i;
-	
+
 	first = bdesc = (struct bucket_desc *) get_free_page();
 	if (!bdesc)
 		panic("Out of memory in init_bucket_desc()");
@@ -107,7 +107,7 @@ static inline void init_bucket_desc()
 		bdesc++;
 	}
 	/*
-	 * This is done last, to avoid race conditions in case 
+	 * This is done last, to avoid race conditions in case
 	 * get_free_page() sleeps and this routine gets called again....
 	 */
 	bdesc->next = free_bucket_desc;
@@ -136,24 +136,24 @@ void *malloc(unsigned int len)
 	 * Now we search for a bucket descriptor which has free space
 	 */
 	cli();	/* Avoid race conditions */
-	for (bdesc = bdir->chain; bdesc; bdesc = bdesc->next) 
+	for (bdesc = bdir->chain; bdesc; bdesc = bdesc->next)
 		if (bdesc->freeptr)
 			break;
 	/*
-	 * If we didn't find a bucket with free space, then we'll 
+	 * If we didn't find a bucket with free space, then we'll
 	 * allocate a new one.
 	 */
 	if (!bdesc) {
 		char		*cp;
 		int		i;
 
-		if (!free_bucket_desc)	
+		if (!free_bucket_desc)
 			init_bucket_desc();
 		bdesc = free_bucket_desc;
 		free_bucket_desc = bdesc->next;
 		bdesc->refcnt = 0;
 		bdesc->bucket_size = bdir->size;
-		bdesc->page = bdesc->freeptr = (void *) cp = get_free_page();
+		bdesc->page = bdesc->freeptr = (void *) (cp = get_free_page());
 		if (!cp)
 			panic("Out of memory in kernel malloc()");
 		/* Set up the chain of free objects */
@@ -176,7 +176,7 @@ void *malloc(unsigned int len)
  * Here is the free routine.  If you know the size of the object that you
  * are freeing, then free_s() will use that information to speed up the
  * search for the bucket descriptor.
- * 
+ *
  * We will #define a macro so that "free(x)" is becomes "free_s(x, 0)"
  */
 void free_s(void *obj, int size)
@@ -194,7 +194,7 @@ void free_s(void *obj, int size)
 		if (bdir->size < size)
 			continue;
 		for (bdesc = bdir->chain; bdesc; bdesc = bdesc->next) {
-			if (bdesc->page == page) 
+			if (bdesc->page == page)
 				goto found;
 			prev = bdesc;
 		}
@@ -229,4 +229,3 @@ found:
 	sti();
 	return;
 }
-
