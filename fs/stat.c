@@ -2,7 +2,7 @@
 #include <sys/stat.h>		// 文件状态头文件。含有文件或文件系统状态结构 stat{} 和常量。
 
 #include <linux/fs.h>		// 文件系统头文件。定义文件表结构（file, buffer_head, m_inode 等）。
-#include <linux/sched.h>	// 调度程序头文件，定义了任务结构 task_struct、初始任务 0 的数据，
+#include <linux/sched.h>	// 调度程序头文件，定义了任务结构 task_struct、初始任务 0 的数据.
 #include <linux/kernel.h>	// 内核头文件。含有一些内核常用函数的原形定义。
 #include <asm/segment.h>	// 段操作头文件。定义了有关段寄存器操作的嵌入式汇编函数。
 
