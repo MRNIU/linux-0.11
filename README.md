@@ -31,14 +31,12 @@ Based on Linux kernel 0.11 , and I also made some changes with 0.12.
 - [x] printk.c
 - [x] panic.c
 
-
 ## 输入输出系统--块设备驱动程序 I/O block
 - [ ] blk.h
 - [ ] hd.c
 - [x] ll_rw_blk.c
 - [ ] ramdisk.c
 - [x] floppy.c
-
 
 ## 输入输出系统--字符设备驱动程序 char
 - [x] keyboard.S
@@ -51,7 +49,6 @@ Based on Linux kernel 0.11 , and I also made some changes with 0.12.
 
 ## 数学协处理器 math
 - [x] math-emulation.c
-
 
 ## 文件系统 file system
 - [x] buffer.c
@@ -68,9 +65,9 @@ Based on Linux kernel 0.11 , and I also made some changes with 0.12.
 - [x] truncate.c
 - [x] open.c
 - [ ] exec.c
-- [ ] stat.c
-- [ ] fcntl.c
-- [ ] ioctl.c
+- [x] stat.c
+- [x] fcntl.c
+- [x] ioctl.c
 
 
 
@@ -88,7 +85,7 @@ done -without commit
 
 ## 内核组建工具 tools
 
-done -without commit
+- [x] build.c
 
 # 参考资料
 - Linux 内核完全注释--赵炯 机械工业出版社,ISBN:978-7-111-14968-2
