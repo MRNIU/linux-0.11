@@ -6,38 +6,32 @@
 # unless it's something special (ie not a .c file).
 #
 
-AR	=gar
-AS	=gas
-LD	=gld
-LDFLAGS	=-s -x
-CC	=gcc
-CFLAGS	=-Wall -O -fstrength-reduce -fomit-frame-pointer -fcombine-regs \
-	-finline-functions -mstring-insns -nostdinc -I../../include
-CPP	=gcc -E -nostdinc -I../../include
+include ../../Makefile.head
+
+CFLAGS	+= -I../../include
+CPP	+= -I../../include
 
 .c.s:
-	$(CC) $(CFLAGS) \
-	-S -o $*.s $<
+	$(Q)$(CC) $(CFLAGS) -S -o $*.s $<
 .s.o:
-	$(AS) -c -o $*.o $<
+	$(Q)$(AS) $(AFLAGS) -o $*.o $<
 .c.o:
-	$(CC) $(CFLAGS) \
-	-c -o $*.o $<
+	$(Q)$(CC) $(CFLAGS) -c -o $*.o $<
 
 OBJS  = math_emulate.o
 
 math.a: $(OBJS)
-	$(AR) rcs math.a $(OBJS)
-	sync
+	$(Q)$(AR) rcs math.a $(OBJS)
+	$(Q)sync
 
 clean:
-	rm -f core *.o *.a tmp_make
-	for i in *.c;do rm -f `basename $$i .c`.s;done
+	$(Q)rm -f core *.o *.a tmp_make
+	$(Q)for i in *.c;do rm -f `basename $$i .c`.s;done
 
 dep:
-	sed '/\#\#\# Dependencies/q' < Makefile > tmp_make
-	(for i in *.c;do echo -n `echo $$i | sed 's,\.c,\.s,'`" "; \
+	$(Q)sed '/\#\#\# Dependencies/q' < Makefile > tmp_make
+	$(Q)(for i in *.c;do echo -n `echo $$i | sed 's,\.c,\.s,'`" "; \
 		$(CPP) -M $$i;done) >> tmp_make
-	cp tmp_make Makefile
+	$(Q)cp tmp_make Makefile
 
 ### Dependencies:

@@ -283,7 +283,7 @@ gdt_descr:  # 下面两行是 lgdt 指令的 6 B 操作数： 长度:基址
   .word 256*8-1 # so does gdt(not that that's any magic number,but it works for me :^)
   .long _gdt
 
-  .align 3  # 按 8 字节方式对齐内存地址边界
+  .align 8  # 按 8 字节方式对齐内存地址边界
 _idt:  .fill 256,8,0  # idt is uninitialized  256 项，每项 8 字节，填 0
 # 全局表。前 4 项分别是空项(不用)、代码段描述符、数据段描述符、系统段描述符，其中系统段描述符
 # Linux 没有派用处。后面还预留了 252 项的空间，用于放置所创建任务的局部描述符(LDT)和对应的

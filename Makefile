@@ -4,21 +4,17 @@
 # 如果你要使用 RAM 盘设备的话，就定义块的大小
 RAMDISK	= #-DRAMDISK=512
 
-AS86		=as86 -0 -a	# 8086 汇编编译器和链接器，剪后面的介绍。后带的参数含义分别
+AS			= i386-elf-as				# GNU 汇编编译器(gas)和链接器(gld)，见后面的介绍
+ASFLAGS = -march=i386
 
-LD86		=ld86 -0		# 是：-0 生成8086目标程序；-a 生成与 gas 和 gld 部分兼容的代码
-
-AS			=gas				# GNU 汇编编译器(gas)和链接器(gld)，见后面的介绍
-
-LD			=gld
 # 下一行是 GNU 链接器 gld 运行时用到的选项。含义是: -s 输出文件中省略所有的符号信息；-x删除所有
 # 局部符号；-M 表示需要在标准输出设备(显示器)上打印连接映像(link map)，是指有链接程序产生的
 # 一种内存地址映像，其中列出了程序段装入到内存中的位置信息。具体来讲有这些信息:
 # a.目标文件及符号信息映射到内存中的未知；
 # b.公共符号如何放置
 # c.连接中班汉的所有文件成员及其引用的符号
-LDFLAGS	=-s -x -M
-CC			=gcc $(RAMDISK)
+LD			=  i386-elf-ld
+LDFLAGS	= -A elf32_i386
 # gcc 是 GNU C 程序编译器。对于 UNIX 类的脚本程序而言，在引用定义的标识符时，需要在前面
 # 加上 $ 符号并用括号括住标识符
 
@@ -27,11 +23,12 @@ CC			=gcc $(RAMDISK)
 # -O 指示对代码进行优化
 # -fstrength-reduce 是优化循环语句
 # -mstring-insns 是 Linus 自己为 gcc 增加的选项，用于对字符串指令优化程序，可以去掉。
-CFLAGS	=-Wall -O -fstrength-reduce -fomit-frame-pointer\
-			-fcombine-regs -mstring-insns
+CC			= i386-elf-gcc $(RAMDISK)
+CFLAGS	=-g -m32 -fno-builtin -fno-stack-protector -fomit-frame-pointer \
+         -fstrength-reduce #-Wall
 # 下行 cpp 是 gcc 的前(预)处理程序。标志 -nostdinc 和 -Iinclude 的含义是不要搜索标准目录中的
 # 头文件，而是使用 -I 选项指定目录或者是在当前目录里搜索头文件。
-CPP			=cpp -nostdinc -Iinclude
+CPP			= i386-elf-cpp -nostdinc
 
 # ROOT_DEV specifies the default root-device when making the image.
 # This can be either FLOPPY, /dev/xxxx or empty, in which case the
@@ -115,12 +112,12 @@ lib/lib.a:	# 库函数 lib.a
 							(cd lib;make)
 
 boot/setup: boot/setup.s											# 这里开始的三行是使用 8086 汇编和连接器
-				$(AS86) -o boot/setup.o boot/setup.s	# 对 setup.s 文件进行编译生成 setup 文件
-				$(LD86) -s -o boot/setup boot/setup.o	# -s 选项表示要除去目标文件中的符号信息
+				$(AS) -o boot/setup.o boot/setup.s	# 对 setup.s 文件进行编译生成 setup 文件
+				$(LD) -s -o boot/setup boot/setup.o	# -s 选项表示要除去目标文件中的符号信息
 
 boot/bootsect: boot/bootsect.s	# 同上，生成 bootsect.o 磁盘引导模块
-				$(AS86) -o boot/bootsect.o boot/bootsect.s
-				$(LD86) -s -o boot/bootsect boot/bootsect.o
+				$(AS) $(ASFLAGS) -o boot/bootsect.o boot/bootsect.s
+				$(LD) -s -o boot/bootsect boot/bootsect.o
 # 129-132 这四行的作用是在 bootsect.s 程序开头添加一行有关 system 文件长度的信息。方法是首先
 # 生成含有 "SYSSIZE=system 文件实际长度" 一行信息的 tmp.s 文件，然后将 bootsect.s 文件添加在
 # 其后。取得 system 长度的方法是：首先利用命令 ls 对 system 文件进行长列表显示，用 grep 命令
