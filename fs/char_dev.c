@@ -49,7 +49,7 @@ static int rw_port(int rw, char * buf, int count, off_t * pos){
   // 对于所要求读写的字节数，并且端口地址小于 64k 是，循环执行单个字节的读写操作
   while(count-->0 && i<65536){
     if(rw==READ)  // 若是读命令，则从端口 i 读取一字节并放到用户缓冲区中
-      puts_fs_byte(inb(i), buf++);
+      put_fs_byte(inb(i), buf++);
     else  // 若是写命令，则从用户数据缓冲区中取一字节输出到端口 i
       outb(get_fs_byte(buf++), i);
     i++;  // 前移一个端口[??]

@@ -63,6 +63,16 @@ static int get_termios(struct tty_struct * tty,struct termios * termios){
   return 0;
 }
 
+static int set_termios(struct tty_struct * tty, struct termios * termios)
+{
+	int i;
+
+	for (i=0 ; i< (sizeof (*termios)) ; i++)
+		((char *)&tty->termios)[i]=get_fs_byte(i+(char *)termios);
+	change_speed(tty);
+	return 0;
+}
+
 // 读取 termio 结构中的信息
 // 参数：tty-指定终端的 tty 结构指针；termio- 用户数据区 termio 结构缓冲区指针。返回 0
 static int get_termio(struct tty_struct * tty,struct termio * termio){

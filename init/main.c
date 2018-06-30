@@ -67,9 +67,9 @@ extern long startup_time; // 内核启动时间(开机时间)(秒)
 /* 以下这些数据是由 setup.s 程序在引导时间设置的(参见 boot/setup.s)
  */
 
-#define EXT_MEM_K(*(unsigned short *)0x90002) // 1 MB 以后的扩展内存大小(KB)
-#define DRIVE_INFO(*(struct drive_info *)0x90080) // 硬盘参数表所在地址
-#define ORIG_ROOT_DEV(*(unsigned short *)0x901FC) // 根文件系统所在设备号
+#define EXT_MEM_K (*(unsigned short *)0x90002) // 1 MB 以后的扩展内存大小(KB)
+#define DRIVE_INFO (*(struct drive_info *)0x90080) // 硬盘参数表所在地址
+#define ORIG_ROOT_DEV (*(unsigned short *)0x901FC) // 根文件系统所在设备号
 
 /*
  * Yeah,yeah,it's ugly,but I cannot find how to do this correctly and this seems to
@@ -79,9 +79,9 @@ extern long startup_time; // 内核启动时间(开机时间)(秒)
 /* 下面这段程序很差劲，但我不知道如何正确实现，而且好象它还能运行。如果有关于实时时钟更多的资料，
  * 那我很感兴趣。这些都是试探出来的买另外还看了一些 BIOS 程序。
  */
-#define CMOS_READ(addr) ({\ // 这段宏读取 CMOS 实时时钟信息
-  outb_p(0x80 | addr,0x70);\  // 0x70 是写端口号，0x80 |addr 是要读取的 CMOS 内存地址
-  inb_p(0x71);\ // 0x71 是读端口号
+#define CMOS_READ(addr) ({\
+  outb_p(0x80 | addr,0x70);\
+  inb_p(0x71);\
   })
 
 #define BCD_TO_BIN(val) ((val)=((val)&15)+((val)>>4)*10)  // 将 BCD 码转换成数字
@@ -93,11 +93,11 @@ static void time_init(void) // 该子程序取 CMOS 时钟，并设置开机时�
   do{
     time.tm_sec=CMOS_READ(0);
     time.tm_min=CMOS_READ(2);
-    time.tm_hour=CMO_READ(4);
+    time.tm_hour=CMOS_READ(4);
     time.tm_mday=CMOS_READ(7);
     time.tm_mon=CMOS_READ(8);
     time.tm_year=CMOS_READ(9);
-  } whlie(time.tm_sec != CMOS_READ(0));
+  } while(time.tm_sec != CMOS_READ(0));
   BCD_TO_BIN(time.tm_sec);
   BCD_TO_BIN(time.tm_min);
   BCD_TO_BIN(time.tm_hour);
@@ -151,7 +151,7 @@ void main(void){  // This really IS void,no error here. The startup routine assu
   tty_init(); // tty 初始化(kernel/chr_drv/tty_io.c 107 行)
   time_init();  // 设置开机启动时间-> startup_time (见 89 行)
   sched_init(); // 调度程序初始化(加载了任务 0 的 tr ，ldtr )(kernel/sched.c 403 行)
-  buffer_init();  // 缓冲管理初始化，建内存链表等(fs/buffer.c 2222 行)
+  buffer_init(buffer_memory_end);  // 缓冲管理初始化，建内存链表等(fs/buffer.c 2222 行)
   hd_init();  // 硬盘初始化(kernel/blk_drv/hd.c 361 行)
   floppy_init();  // 软驱初始化(kernel/blk_drv/floppy.c 524 行)
   sti();  // 所有初始化工作都完成了，开启中断
@@ -237,7 +237,7 @@ void init(void){
       continue;
     }
     if (!pid){
-      colse(0);close(1);colse(2);
+      close(0);close(1);close(2);
       setsid();
       (void) open("/dev/tty0",O_RDWR,0);
       (void) dup(0);

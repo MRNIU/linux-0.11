@@ -42,12 +42,12 @@ int file_read(struct m_inode * inode, struct file * filp, char * buf, int count)
     if(bh){
       char * p=nr+bh->b_data;
       while(chars-->0)
-        puts_fs_byte(*(p++), buf++);
+        put_fs_byte(*(p++), buf++);
       brelse(bh);
     }
     else{
       while(chars-->0)
-        puts_fs_byte(0, buf++);
+        put_fs_byte(0, buf++);
     }
   }
   // 修改该 i 节点的访问时间为当前时间。返回读取的字节数，若读取字节数为 0.则返回出错号

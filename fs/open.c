@@ -110,6 +110,22 @@ int sys_chroot(const char * filename){
 	return (0);
 }
 
+int sys_chmod(const char * filename,int mode)
+{
+	struct m_inode * inode;
+
+	if (!(inode=namei(filename)))
+		return -ENOENT;
+	if ((current->euid != inode->i_uid) && !suser()) {
+		iput(inode);
+		return -EACCES;
+	}
+	inode->i_mode = (mode & 07777) | (inode->i_mode & ~07777);
+	inode->i_dirt = 1;
+	iput(inode);
+	return 0;
+}
+
 // 修改文件宿主系统调用函数。参数 filename 是文件名，uid 时用户标示符(用户 id)，gid 是组 id
 // 若操作成功则返回 0，否则返回出错码
 int sys_chown(const char * filename, int uid, int gid){

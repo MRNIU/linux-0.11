@@ -248,7 +248,7 @@ void copy_to_cooked(struct tty_struct * tty){
       }
       PUTCH(c,tty->secondary);  // 将该字符放入辅助队列中
   }
-  wake_UP(&tty->secondary.proc_list); // 唤醒等待该辅助缓冲队列的进程(若有的话)
+  wake_up(&tty->secondary.proc_list); // 唤醒等待该辅助缓冲队列的进程(若有的话)
 }
 // tty 读函数。参数：channel-子设备号；buf-缓冲区指针；nr-欲读字节数
 // 返回已读字节数

@@ -103,7 +103,7 @@ int do_exit(long code){  // code 是错误代码。
   int i;
 // 释放当前进程代码段和数据段所占的内存页(free_page_tables() 在 mm/memory.c 2222 行)
   free_page_tables(get_base(current->ldt[1]),get_limit(0x0f));
-  free_page_tables(get_vase(current->ldt[2]),get_limit(0x17));
+  free_page_tables(get_base(current->ldt[2]),get_limit(0x17));
 // 如果当前进程有子进程，就将子进程的 father 置为 1(其父进程改为进程 1).如果该子进程已经处于僵死
 // (ZOMBIE)状态，则向进程 1 发送子进程终止信号 SIGCHLD.
   for(i=0;i<NR_TASKS;i++)

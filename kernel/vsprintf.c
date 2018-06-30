@@ -105,7 +105,7 @@ int vsprintf(char * buf,const char * fmt,va_list args){
   int i;
   char * str; // 用于存放转换过程中的字符串
   char * s;
-  char * ip;
+  int * ip;
 
   int flags;  // flags to number()
               // number() 函数使用的标志

@@ -61,7 +61,6 @@ extern struct task_struct * wait_for_request; // 等待请求的任务结构
 #if (MAJOR_NR==1) // RAM 盘的主设备号是 1.根据这里的定义可以推理内存块只设备号也为 1
 // ram disk RAM 盘(内存虚拟盘)
 #define DEVICE_NAME "ramdisk" // 硬盘名称 ramdisk
-#define DEVICE_INTR do_floppy // 设备中断处理程序 do_floppy()
 #define DEVICE_REQUEST do_rd_request  // 设备请求函数 do_rd_request()
 #define DEVICE_NR(device) ((device) & 7) // 设备号(0~7)
 #define DEVICE_ON(device) // 开启设备。虚拟键盘无需开启和关闭
@@ -73,7 +72,7 @@ extern struct task_struct * wait_for_request; // 等待请求的任务结构
 #define DEVICE_INTR do_floppy // 设备中断处理程序 do_floppy()
 #define DEVICE_REQUEST do_fd_request  // 设备请求函数 do_fd_request()
 #define DEVICE_NR(device) ((device) & 3)  // 设备号(0~3)
-#define DEVICE_ON)device floppy_on(DEVICE_NR(device)) // 开启设备函数 floppyon()
+#define DEVICE_ON(device) floppy_on(DEVICE_NR(device)) // 开启设备函数 floppyon()
 #define DEVICE_OFF(device) floppy_off(DEVICE_NR(device))  // 关闭设备函数 floppyoff()
 
 #elif (MAJOR_NR==3) // 硬盘主设备号是 3
@@ -99,14 +98,14 @@ void (*DEVICE_INTR)(void)=NULL;
 #endif
 static void (DEVICE_REQUEST)(void);
 // 释放锁定的缓冲区
-extern inline void unlock_buffer(struct buffer_head * bh){
+static inline void unlock_buffer(struct buffer_head * bh){
   if(!bh->b_lock) // 如果指定的缓冲区 bh 并没有被上锁，则显示警告信息
     printk(DEVICE_NAME ": free buffer being unlocked\n");
   bh->b_lock=0; // 否则将该缓冲区解锁
   wake_up(&bh->b_wait); // 唤醒等待该缓冲区的进程
 }
 // 结束请求
-extern inline void end_request(int uptodate){
+static inline void end_request(int uptodate){
   DEVICE_OFF(CURRENT->dev); // 关闭设备
   if(CURRENT->bh){  // CURRENT 为指定主设备号的当前请求结构
     CURRENT->bh->b_uptodate=uptodate; // 置更新标志

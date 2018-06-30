@@ -214,7 +214,7 @@ static struct buffer_head * add_entrty(struct m_inode * dir, const char * name,
     return NULL;
 #else
   if(namelen>NAME_LEN)
-    return NAME_LEN;
+    namelen= NAME_LEN;
 #endif
   if(!namelen)
     return NULL;
@@ -361,7 +361,7 @@ static struct m_inode * dir_namei(const char * pathname, int * namelen, const ch
     if(c=='/')
       basename=pathname;
   *namelen=pathname-basename-1;
-  *namelen=basename;
+  *name=basename;
   return dir;
 }
 
@@ -577,7 +577,7 @@ int sys_mknod(const char * filename, int mode, int dev){
   de->inode=inode->i_num;
   bh->b_dirt=1;
   iput(dir);
-  ipit(inode);
+  iput(inode);
   brelse(bh);
   return 0;
 }
@@ -647,7 +647,7 @@ int sys_mkdir(const char * pathname, int mode){
   // 令 de 指向目录项数据块，置该目录项的 i 节点号字段等于新申请的 i 节点号，名字字段等于 "."
   de=(struct dir_entry *)dir_block->b_data;
   de->inode=inode->i_num;
-  srtcpy(de->name, ".");
+  strcpy(de->name, ".");
   inode->i_nlinks=2;
   // 然后设置该高速缓冲区已修改标志，并释放该缓冲区
   dir_block->b_dirt=1;
@@ -920,14 +920,14 @@ int sys_link(const char * oldname, const char * newname){
     return -ENOENT;
   // 如果原路径名对应的是一个目录名，则释放该 i 节点，返回出错号
   if(S_ISDIR(oldinode->i_mode)){
-    iput(dir);
+    iput(oldinode);
     return -EPERM;
   }
   // 查找新路径名的最顶层目录的 i 节点，并返回最后的文件名长度。如果目录的 i 节点没有找到，则
   // 释放原路径名的 i 节点，返回出错号。
   dir=dir_namei(newname, &namelen, &basename);
   if(!dir){
-    iput(oldname);
+    iput(oldinode);
     return -EACCES;
   }
   // 如果新路径名中不包括文件名，则释放原路径名 i 节点和新路径名目录的 i 节点，返回出错号

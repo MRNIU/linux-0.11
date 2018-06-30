@@ -103,7 +103,7 @@ int new_block(int dev){
   j+=i*8192+sb->s_firstdatazone-1;
   if(j>=sb->s_nzones) return 0;
 // 读取设备上的新逻辑块数据(验证).如果失败则死机
-  if(!(bh=get(dev,j)))  panic("new_block:cannot get block");
+  if(!(bh=getblk(dev,j)))  panic("new_block:cannot get block");
   if(bh->b_count=1) panic("new block:count is !=1");  // 新块的引用计数应为 1.否则死机
 // 该新逻辑块清零,并置位更新标志和已修改标志.然后释放对应缓冲区,返回逻辑块号.
   clear_block(bh->b_data);

@@ -262,7 +262,7 @@ struct m_inode * get_pipe_inode(void){
 // 从设备上读取指定节点号的 i 节点.nr-i 节点号
 struct m_inode * iget(int dev, int nr){
   struct m_inode *inode,*empty;
-  if(!dev)  oanic("iget with dev==0");
+  if(!dev)  panic("iget with dev==0");
   empty=get_empty_inode();  // 从 i 节点表中取一个空闲 i 节点
 // 扫描 i 节点表.寻找指定节点号的 i 节点.冰帝政该节点的引用次数
   inode=inode_table;

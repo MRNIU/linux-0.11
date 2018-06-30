@@ -67,6 +67,11 @@ int sys_phys(){ // 映射任意物理内存带进程的虚拟地址空间
   return -ENOSYS;
 }
 
+int sys_lock()
+{
+	return -ENOSYS;
+}
+
 int sys_mpx(){
   return -ENOSYS;
 }

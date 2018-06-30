@@ -34,7 +34,7 @@ int read_pipe(struct m_inode * inode, char * buf, int count){
     PIPE_TAIL(*inode)&=(PAGE_SIZE-1);
     // 将管道中的数据复制到用户缓冲区中。对于管道 i 节点，其 i_size 字段中是管道缓冲块指针。
     while(chars-->0)
-      puts_fs_byte(((char *)inode->i_size)[size++], buf++);
+      put_fs_byte(((char *)inode->i_size)[size++], buf++);
   }
   wake_up(&inode->i_wait);  // 唤醒等待该管道 i 节点的进程，并返回读取的字符串。
   return read;
@@ -105,7 +105,7 @@ int sys_pipe(unsigned long * fildes){
     if(j==1)  // 如果只有一个空闲文件句柄，则释放该句柄
       current->filp[fd[0]]=NULL;
     // 如果没有找到两个空闲句柄，则释放上面过去的两个文件结构项(复位引用计数值)，并返回 -1.
-    if(f<2){
+    if(j<2){
       f[0]->f_count=f[1]->f_count=0;
       return -1;
     }
