@@ -23,7 +23,7 @@ dd if=$setup seek=1 bs=512 count=4 of=$image >/dev/null 2>&1
 # Verify RAMDISK_START, must reserve enough space for bootsect, setup and kernel itself.
 # TODO: need to document why need 9 more blocks?
 
-KERNEL_SIZE=$(stat -c%s $kernel | tr -d '\n')
+KERNEL_SIZE=$(stat -t %s $kernel | tr -d "\n")
 _SYS_SIZE=$(( KERNEL_SIZE + 5*512))
 _RAMDISK_START=$(( _SYS_SIZE / 1024 + 9))
 
