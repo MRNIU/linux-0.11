@@ -24,17 +24,17 @@ dd if=$setup seek=1 bs=512 count=4 of=$image >/dev/null 2>&1
 # TODO: need to document why need 9 more blocks?
 
 KERNEL_SIZE=$(stat -t %s $kernel | tr -d "\n")
-_SYS_SIZE=$(( KERNEL_SIZE + 5*512))
-_RAMDISK_START=$(( _SYS_SIZE / 1024 + 9))
+_SYS_SIZE=$((KERNEL_SIZE + 5 * 512))
+_RAMDISK_START=$((_SYS_SIZE / 1024 + 9))
 
 if [ $_RAMDISK_START -gt $RAMDISK_START ]; then
-    echo "Note: The kernel binary is too big, Please increase RAMDISK_START to (138, 410)"
-    echo
-    echo " e.g."
-    echo "     $ make distclean"
-    echo "     $ make boot RAMDISK_START=$_RAMDISK_START"
-    echo
-    exit -1
+  echo "Note: The kernel binary is too big, Please increase RAMDISK_START to (138, 410)"
+  echo
+  echo " e.g."
+  echo "     $ make distclean"
+  echo "     $ make boot RAMDISK_START=$_RAMDISK_START"
+  echo
+  exit -1
 fi
 
 dd if=$kernel seek=5 bs=512 of=$image >/dev/null 2>&1

@@ -11,4 +11,5 @@
 #define extern
 #define inline
 #define __LIBRARY__
+
 #include <string.h>

@@ -29,7 +29,7 @@
       "displayName": "configurePresets_base",
       "description": "base configurePresets",
       "generator": "Unix Makefiles",
-      "toolchainFile": "",
+      "toolchainFile": "${sourceDir}/cmake/gcc.cmake",
       "binaryDir": "${sourceDir}/build",
       "installDir": "",
       "cacheVariables": {

@@ -2,14 +2,8 @@
 # This file is a part of MRNIU/linux-0.11
 # (https://github.com/MRNIU/linux-0.11).
 # 
-# x86_64-x86_64-gcc.cmake for MRNIU/linux-0.11.
+# gcc.cmake for MRNIU/linux-0.11.
 
-# 目标为无操作系统的环境
-set(CMAKE_SYSTEM_NAME Generic)
-# 目标架构
-set(CMAKE_SYSTEM_PROCESSOR x86_64)
-
-# @todo mac 测试
 if (APPLE)
     message(STATUS "Now is Apple systens.")
     # GCC
