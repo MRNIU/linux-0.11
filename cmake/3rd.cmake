@@ -1,8 +1,8 @@
 
-# This file is a part of MRNIU/cmake-kernel
-# (https://github.com/MRNIU/cmake-kernel).
+# This file is a part of MRNIU/linux-0.11
+# (https://github.com/MRNIU/linux-0.11).
 #
-# 3rd.cmake for MRNIU/cmake-kernel.
+# 3rd.cmake for MRNIU/linux-0.11.
 # 依赖管理
 
 # 设置依赖下载路径

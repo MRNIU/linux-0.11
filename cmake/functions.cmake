@@ -1,8 +1,8 @@
 
-# This file is a part of MRNIU/cmake-kernel
-# (https://github.com/MRNIU/cmake-kernel).
+# This file is a part of MRNIU/linux-0.11
+# (https://github.com/MRNIU/linux-0.11).
 #
-# functions.cmake for MRNIU/cmake-kernel.
+# functions.cmake for MRNIU/linux-0.11.
 # 辅助函数
 
 # 生成 target 输出文件的 readelf -a

@@ -1,8 +1,8 @@
 
-# This file is a part of MRNIU/cmake-kernel
-# (https://github.com/MRNIU/cmake-kernel).
+# This file is a part of MRNIU/linux-0.11
+# (https://github.com/MRNIU/linux-0.11).
 #
-# add_header.cmake for MRNIU/cmake-kernel.
+# add_header.cmake for MRNIU/linux-0.11.
 # 将头文件路径添加到 _target 的搜索路径中
 
 function(add_header_boot _target)

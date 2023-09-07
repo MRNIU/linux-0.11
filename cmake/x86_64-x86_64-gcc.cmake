@@ -1,8 +1,8 @@
 
-# This file is a part of MRNIU/cmake-kernel
-# (https://github.com/MRNIU/cmake-kernel).
+# This file is a part of MRNIU/linux-0.11
+# (https://github.com/MRNIU/linux-0.11).
 # 
-# x86_64-x86_64-gcc.cmake for MRNIU/cmake-kernel.
+# x86_64-x86_64-gcc.cmake for MRNIU/linux-0.11.
 
 # 目标为无操作系统的环境
 set(CMAKE_SYSTEM_NAME Generic)

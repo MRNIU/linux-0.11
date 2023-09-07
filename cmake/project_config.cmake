@@ -1,8 +1,8 @@
 
-# This file is a part of MRNIU/cmake-kernel
-# (https://github.com/MRNIU/cmake-kernel).
+# This file is a part of MRNIU/linux-0.11
+# (https://github.com/MRNIU/linux-0.11).
 #
-# project_config.cmake for MRNIU/cmake-kernel.
+# project_config.cmake for MRNIU/linux-0.11.
 # 配置信息
 
 # 设置 cmake 目标环境根目录
