@@ -9,6 +9,8 @@ project(
         src
 )
 
+add_compile_options(${COMMON_COMPILE_OPTIONS})
+
 set(BLK_DRV_SRC
         kernel/blk_drv/ll_rw_blk.c
         kernel/blk_drv/floppy.c
@@ -19,14 +21,13 @@ add_library(blk_drv STATIC
         ${BLK_DRV_SRC}
 )
 
-
 set(CHR_DRV_SRC  
         kernel/chr_drv/tty_io.c
         kernel/chr_drv/console.c
         kernel/chr_drv/keyboard.s 
         kernel/chr_drv/serial.c
         kernel/chr_drv/rs_io.s
-        kernel/chr_drv/tty_ioctl.s
+        kernel/chr_drv/tty_ioctl.c
 )
 add_library(chr_drv STATIC
         ${CHR_DRV_SRC}
@@ -35,7 +36,7 @@ add_library(chr_drv STATIC
 set(KERNEL_SRC  
         kernel/sched.c
         kernel/system_call.s
-        kernel/traps.s
+        kernel/traps.c
         kernel/asm.s
         kernel/fork.c
         kernel/panic.c
@@ -99,17 +100,4 @@ add_library(lib STATIC
         ${LIB_SRC}
 )
 
-# TODO: need to document why the size need plus 3*512
-KERNEL_SIZE = $(stat -t "%s" ../kernel.bin | tr -d "\n")
-   SYS_SIZE = $(echo '($(KERNEL_SIZE) + 15 + 3*512)/16' | bc)
-
-
-target_compile_options(boot PRIVATE
-        ${COMMON_COMPILE_OPTIONS}
-        -DSYS_SIZE=$(SYS_SIZE)
-)
-
-target_link_options(boot PRIVATE
-        ${COMMON_LINK_OPTIONS}
-        -Ttext 0 -e _start
-)
+include_directories(${PROJECT_SOURCE_DIR}/include)

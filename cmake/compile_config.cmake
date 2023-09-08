@@ -7,16 +7,16 @@
 
 # 通用编译选项
 list(APPEND COMMON_COMPILE_OPTIONS
-        # 如果 CMAKE_BUILD_TYPE 为 Release 则使用 -O3 -Werror，否则使用 -O0 -g -ggdb
-        $<$<CONFIG:Release>:-O3;-Werror>
-        $<$<CONFIG:Debug>:-O0;-g;-ggdb>
+        -O0
+        -g
+        -ggdb
         # 打开全部警告
-        -Wall
+        # -Wall
         # 打开额外警告
-        -Wextra
+        # -Wextra
         -fomit-frame-pointer
         -fno-builtin
-        -march=i386
+        -m32
 )
 
 # 通用链接选项

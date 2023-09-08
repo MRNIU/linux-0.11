@@ -26,10 +26,6 @@ endif ()
 # 设置辅助 cmake 脚本路径
 list(APPEND CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake")
 
-# 导入项目配置
-include(project_config)
-# 导入头文件处理
-include(add_header)
 # 导入函数
 include(functions)
 
@@ -41,13 +37,12 @@ include(compile_config)
 
 # 添加要编译的目录
 add_subdirectory(${PROJECT_SOURCE_DIR}/src)
-add_subdirectory(${PROJECT_SOURCE_DIR}/test)
 add_subdirectory(${PROJECT_SOURCE_DIR}/doc)
 
-if (TARGET_ARCH STREQUAL "x86_64" OR TARGET_ARCH STREQUAL "aarch64")
-    # 创建 image 目录并将文件复制
-    make_uefi_dir(${PROJECT_BINARY_DIR}/src/boot/boot.efi $<TARGET_FILE:kernel> ${PROJECT_SOURCE_DIR}/tools/startup.nsh)
-endif ()
+# if (TARGET_ARCH STREQUAL "x86_64" OR TARGET_ARCH STREQUAL "aarch64")
+#     # 创建 image 目录并将文件复制
+#     make_uefi_dir(${PROJECT_BINARY_DIR}/src/boot/boot.efi $<TARGET_FILE:kernel> ${PROJECT_SOURCE_DIR}/tools/startup.nsh)
+# endif ()
 
 # qemu 参数设置
 list(APPEND QEMU_FLAGS
@@ -55,26 +50,11 @@ list(APPEND QEMU_FLAGS
         -serial stdio
         # 启动 telnet 服务，使用 2333 端口，不等待连接
         -monitor ${QEMU_MONITOR_ARG}
+        -m 128M
+        -net none
+        -bios ${ovmf_BINARY_DIR}/OVMF_${TARGET_ARCH}.fd
+        -hda fat:rw:${CMAKE_BINARY_DIR}/image/
 )
-# 目标平台参数
-if (TARGET_ARCH STREQUAL "x86_64")
-    list(APPEND QEMU_FLAGS
-            -m 128M
-            -net none
-            -bios ${ovmf_BINARY_DIR}/OVMF_${TARGET_ARCH}.fd
-            -hda fat:rw:${CMAKE_BINARY_DIR}/image/
-    )
-elseif (TARGET_ARCH STREQUAL "riscv64")
-    list(APPEND QEMU_FLAGS
-            -machine virt
-            -nographic
-            # 可选项，qemu7.0 自带了 opensbi1.0
-            -bios ${opensbi_BINARY_DIR}/platform/generic/firmware/fw_jump.elf
-            -kernel $<TARGET_FILE:kernel>
-    )
-elseif (TARGET_ARCH STREQUAL "aarch64")
-    # @todo
-endif ()
 
 # 运行 qemu
 add_custom_target(run DEPENDS ${RUN_DEPENDS}
