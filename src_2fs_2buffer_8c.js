@@ -1,0 +1,28 @@
+var src_2fs_2buffer_8c =
+[
+    [ "_hashfn", "src_2fs_2buffer_8c.html#ad688715e78b3e24ed22296289298a60c", null ],
+    [ "BADNESS", "src_2fs_2buffer_8c.html#aeae6468400b6d843e991359c508f1fd5", null ],
+    [ "COPYBLK", "src_2fs_2buffer_8c.html#aa39311f77b0e38922c9864a23e499bfe", null ],
+    [ "hash", "src_2fs_2buffer_8c.html#ac1217b963ec04e48db731765c971bb75", null ],
+    [ "bread", "src_2fs_2buffer_8c.html#ad78fac6715f3c28e0cf0522df36a111f", null ],
+    [ "bread_page", "src_2fs_2buffer_8c.html#a7bcdedc1f5ba7597461c3a49559e5b12", null ],
+    [ "breada", "src_2fs_2buffer_8c.html#a1b310db1dc1e28275c0888c724d48724", null ],
+    [ "brelse", "src_2fs_2buffer_8c.html#ad15c8296a5599c15736bb9383050eec7", null ],
+    [ "buffer_init", "src_2fs_2buffer_8c.html#a008e777b9e9f7711d783bf16505bd714", null ],
+    [ "check_disk_change", "src_2fs_2buffer_8c.html#a53eefc9fcd3ae0cc20ec6eeea2dd6d44", null ],
+    [ "find_buffer", "src_2fs_2buffer_8c.html#a6dd8a689596cf17cdaf4dd6eb6c98e8f", null ],
+    [ "get_hash_table", "src_2fs_2buffer_8c.html#a26c3be9640a543377e6c6f8d189c83e9", null ],
+    [ "getblk", "src_2fs_2buffer_8c.html#a197cebc7bc8d67773a979e92c14b40c0", null ],
+    [ "insert_into_queues", "src_2fs_2buffer_8c.html#aca6ca6f3081c02518e27afc1d833796a", null ],
+    [ "invalidate_buffers", "src_2fs_2buffer_8c.html#acea2962102f7d035a1778ac7ca18c538", null ],
+    [ "remove_from_queues", "src_2fs_2buffer_8c.html#a3cc00a803282300ea51f20842322814e", null ],
+    [ "sync_dev", "src_2fs_2buffer_8c.html#a95df8a2e491bf4181e3d7b6ddfc755a3", null ],
+    [ "sys_sync", "src_2fs_2buffer_8c.html#a3c674993ee07115ee464f88503882488", null ],
+    [ "wait_on_buffer", "src_2fs_2buffer_8c.html#a96f49dc697e8292e946ba7680ebecf96", null ],
+    [ "buffer_wait", "src_2fs_2buffer_8c.html#a155818a3787ba8f8bbc578b6014c5078", null ],
+    [ "end", "src_2fs_2buffer_8c.html#abce9f5dc9c83f2639b72024fdee5d388", null ],
+    [ "free_list", "src_2fs_2buffer_8c.html#aef8235d6e36e5dc84b71c81d0dd3ba4c", null ],
+    [ "hash_table", "src_2fs_2buffer_8c.html#a16026aabc8151209ad2b1618388b28d5", null ],
+    [ "NR_BUFFERS", "src_2fs_2buffer_8c.html#ab3fe530a64b0717f7a43e2e693e5137f", null ],
+    [ "start_buffer", "src_2fs_2buffer_8c.html#aa5809896ce36f9b7ddab0b41745cb0bc", null ]
+];

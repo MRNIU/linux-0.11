@@ -1,0 +1,26 @@
+var searchData=
+[
+  ['f_5fcount_2359',['f_count',['../structfile.html#aa9793ad16dd2b88ad0d76cd782b0d2b7',1,'file']]],
+  ['f_5fflags_2360',['f_flags',['../structfile.html#a5d18f1d6ca2c48152cf4b9c30624dcca',1,'file']]],
+  ['f_5ffname_2361',['f_fname',['../structustat.html#ac0488ed365a7214e12dd83a8dad819f4',1,'ustat']]],
+  ['f_5ffpack_2362',['f_fpack',['../structustat.html#a459c700f2161522bcfea51b9dfba4319',1,'ustat']]],
+  ['f_5finode_2363',['f_inode',['../structfile.html#ae57c18a676dcd6ef788b20512bd995e3',1,'file']]],
+  ['f_5fmode_2364',['f_mode',['../structfile.html#a50349f1577219a65b6e8d66d7e5eb284',1,'file']]],
+  ['f_5fpos_2365',['f_pos',['../structfile.html#a4bbfba4214dd3a75980bca8efd104183',1,'file']]],
+  ['f_5ftfree_2366',['f_tfree',['../structustat.html#ac1963b280002ab392041bea858f69879',1,'ustat']]],
+  ['f_5ftinode_2367',['f_tinode',['../structustat.html#af178d9f55415ce131358a7ac689dac39',1,'ustat']]],
+  ['father_2368',['father',['../structtask__struct.html#a889eead58452db4f8a717d529db3476f',1,'task_struct']]],
+  ['fcs_2369',['fcs',['../structi387__struct.html#a358ebcefb0ea3a477229a9128a8779d6',1,'i387_struct']]],
+  ['file_5ftable_2370',['file_table',['../src_2include_2linux_2fs_8h.html#ad8a0a8efe57313ad9d7359e5653ed901',1,'file_table():&#160;file_table.c'],['../src_2fs_2file__table_8c.html#ad8a0a8efe57313ad9d7359e5653ed901',1,'file_table():&#160;file_table.c'],['../flash_2Linux-0_811_2include_2linux_2fs_8h.html#ad8a0a8efe57313ad9d7359e5653ed901',1,'file_table():&#160;file_table.c'],['../flash_2Linux-0_811_2fs_2file__table_8c.html#ad8a0a8efe57313ad9d7359e5653ed901',1,'file_table():&#160;file_table.c']]],
+  ['filp_2371',['filp',['../structtask__struct.html#af92b36c90c0636553c690c20ecc9553e',1,'task_struct']]],
+  ['fip_2372',['fip',['../structi387__struct.html#adab56c18d1b36bc7e970ce5f86225093',1,'i387_struct']]],
+  ['floppy_2373',['floppy',['../flash_2Linux-0_811_2kernel_2blk__drv_2floppy_8c.html#afe68410b30b0841fd7b48c76ac64578a',1,'floppy():&#160;floppy.c'],['../src_2kernel_2blk__drv_2floppy_8c.html#afe68410b30b0841fd7b48c76ac64578a',1,'floppy():&#160;floppy.c']]],
+  ['floppy_5ftype_2374',['floppy_type',['../flash_2Linux-0_811_2kernel_2blk__drv_2floppy_8c.html#a1bd43cbeacad447cdb7fcbe5aba368ce',1,'floppy_type():&#160;floppy.c'],['../src_2kernel_2blk__drv_2floppy_8c.html#a1bd43cbeacad447cdb7fcbe5aba368ce',1,'floppy_type():&#160;floppy.c']]],
+  ['fn_2375',['fn',['../structtimer__list.html#a9da59c5e81cd532fc11bdb8945cefbc5',1,'timer_list']]],
+  ['foo_2376',['foo',['../structi387__struct.html#a9054a32ecddb9525ac7a04cccf40e25b',1,'i387_struct']]],
+  ['fos_2377',['fos',['../structi387__struct.html#a4eeaa2a0269ead425814522181793c29',1,'i387_struct']]],
+  ['free_5fbucket_5fdesc_2378',['free_bucket_desc',['../flash_2Linux-0_811_2lib_2malloc_8c.html#aa4371dda786f2e79b7dcdd15fb99b310',1,'free_bucket_desc():&#160;malloc.c'],['../src_2lib_2malloc_8c.html#aa4371dda786f2e79b7dcdd15fb99b310',1,'free_bucket_desc():&#160;malloc.c']]],
+  ['free_5flist_2379',['free_list',['../flash_2Linux-0_811_2fs_2buffer_8c.html#aef8235d6e36e5dc84b71c81d0dd3ba4c',1,'free_list():&#160;buffer.c'],['../src_2fs_2buffer_8c.html#aef8235d6e36e5dc84b71c81d0dd3ba4c',1,'free_list():&#160;buffer.c']]],
+  ['freeptr_2380',['freeptr',['../structbucket__desc.html#a513e6e2905f0a6942e960810b1860a79',1,'bucket_desc']]],
+  ['fs_2381',['fs',['../structtss__struct.html#aa8df65f6223dbabbb80fd77639758ff9',1,'tss_struct']]]
+];

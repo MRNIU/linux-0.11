@@ -1,0 +1,11 @@
+<map id="super_block" name="super_block">
+<area shape="rect" id="node1" title=" " alt="" coords="87,1152,230,1405"/>
+<area shape="rect" id="node2" href="$structbuffer__head.html" title=" " alt="" coords="103,880,214,1045"/>
+<area shape="rect" id="node3" href="$structtask__struct.html" title=" " alt="" coords="258,535,374,759"/>
+<area shape="rect" id="node4" href="$structm__inode.html" title=" " alt="" coords="351,851,459,1075"/>
+<area shape="rect" id="node8" href="$structfile.html" title=" " alt="" coords="418,1218,505,1339"/>
+<area shape="rect" id="node5" href="$structtss__struct.html" title=" " alt="" coords="127,248,243,472"/>
+<area shape="rect" id="node6" href="$structi387__struct.html" title=" " alt="" coords="138,5,233,185"/>
+<area shape="rect" id="node7" href="$structdesc__struct.html" title=" " alt="" coords="268,314,364,406"/>
+<area shape="rect" id="node9" href="$structsigaction.html" title=" " alt="" coords="389,299,499,421"/>
+</map>

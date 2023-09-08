@@ -1,0 +1,28 @@
+var flash_2Linux_0_811_2kernel_2sys_8c =
+[
+    [ "sys_acct", "flash_2Linux-0_811_2kernel_2sys_8c.html#a385ab4cfc506f39094f5abda6bac6ac2", null ],
+    [ "sys_break", "flash_2Linux-0_811_2kernel_2sys_8c.html#a631b9d09f0ffe761b745f590018431c4", null ],
+    [ "sys_brk", "flash_2Linux-0_811_2kernel_2sys_8c.html#aee6f54c88e3d091ea8e497b89b605352", null ],
+    [ "sys_ftime", "flash_2Linux-0_811_2kernel_2sys_8c.html#a25940312909e6c6e681be1c7bf8de6d7", null ],
+    [ "sys_getpgrp", "flash_2Linux-0_811_2kernel_2sys_8c.html#a4189d21a994422eca3796f334f66267a", null ],
+    [ "sys_gtty", "flash_2Linux-0_811_2kernel_2sys_8c.html#a9d8cfad627dd423f56419b2c9ca31afc", null ],
+    [ "sys_lock", "flash_2Linux-0_811_2kernel_2sys_8c.html#ac04e2bc78eab91707adf52c448d7bc8c", null ],
+    [ "sys_mpx", "flash_2Linux-0_811_2kernel_2sys_8c.html#a4e9d4f3dcb0bda66bffe003266ae4054", null ],
+    [ "sys_phys", "flash_2Linux-0_811_2kernel_2sys_8c.html#a9148005341b0e500dcf4743052b7b53f", null ],
+    [ "sys_prof", "flash_2Linux-0_811_2kernel_2sys_8c.html#a569b75d2ccb09f3e0946c9fa4d277ecf", null ],
+    [ "sys_ptrace", "flash_2Linux-0_811_2kernel_2sys_8c.html#a8fbe84cd65d8adadd07025dab9228a33", null ],
+    [ "sys_rename", "flash_2Linux-0_811_2kernel_2sys_8c.html#a273ddc8c0a343b8acdb07b6baf2f1ba0", null ],
+    [ "sys_setgid", "flash_2Linux-0_811_2kernel_2sys_8c.html#a6a0c75ce8cbd1da51d2a54d885179fed", null ],
+    [ "sys_setpgid", "flash_2Linux-0_811_2kernel_2sys_8c.html#a6acc0f7359ced126db5e09a05e247ee3", null ],
+    [ "sys_setregid", "flash_2Linux-0_811_2kernel_2sys_8c.html#a7209d822ee98a7c3f401bc251a024cef", null ],
+    [ "sys_setreuid", "flash_2Linux-0_811_2kernel_2sys_8c.html#a014ad477afa88c61b1d8f7d5b28dbbfa", null ],
+    [ "sys_setsid", "flash_2Linux-0_811_2kernel_2sys_8c.html#a3e719e73e2229ff0ac3d99076fd90e14", null ],
+    [ "sys_setuid", "flash_2Linux-0_811_2kernel_2sys_8c.html#a32fe2645712ee7b824e0ea6769acdabc", null ],
+    [ "sys_stime", "flash_2Linux-0_811_2kernel_2sys_8c.html#a13a8f8c2ea37447a34a48d364febc6d5", null ],
+    [ "sys_stty", "flash_2Linux-0_811_2kernel_2sys_8c.html#ab8d8caae85eecda19c2d5cc41d67af1e", null ],
+    [ "sys_time", "flash_2Linux-0_811_2kernel_2sys_8c.html#a944189ed10ed5a3ba57f0fbd09f5e79b", null ],
+    [ "sys_times", "flash_2Linux-0_811_2kernel_2sys_8c.html#ab12535d66aaba5404b7101d381a43b36", null ],
+    [ "sys_ulimit", "flash_2Linux-0_811_2kernel_2sys_8c.html#a6786a8a0e32c8ee3902cbdeae577b936", null ],
+    [ "sys_umask", "flash_2Linux-0_811_2kernel_2sys_8c.html#af19ccd31053bd0b00fab930af41f86f8", null ],
+    [ "sys_uname", "flash_2Linux-0_811_2kernel_2sys_8c.html#a45548e3c78799983a4fd25f7d50094c3", null ]
+];

@@ -1,0 +1,23 @@
+var searchData=
+[
+  ['r_5faddress_2467',['r_address',['../structrelocation__info.html#a8fab8982346fb93ca880d107e88e38ff',1,'relocation_info']]],
+  ['r_5fextern_2468',['r_extern',['../structrelocation__info.html#a2e3c39616f2506b30ff13928265a71fa',1,'relocation_info']]],
+  ['r_5flength_2469',['r_length',['../structrelocation__info.html#aa07ba6f0287d8eda37d0aacea2b2db9a',1,'relocation_info']]],
+  ['r_5fpad_2470',['r_pad',['../structrelocation__info.html#a5f9643b7daacfa9094936f1dc8c92877',1,'relocation_info']]],
+  ['r_5fpcrel_2471',['r_pcrel',['../structrelocation__info.html#afb22755c89a551b3df63983f2bbbf2c5',1,'relocation_info']]],
+  ['r_5fsymbolnum_2472',['r_symbolnum',['../structrelocation__info.html#a62a95d8364e2f92673fa9d6ec58d9975',1,'relocation_info']]],
+  ['rate_2473',['rate',['../structfloppy__struct.html#ad9fc6fa2630f4a2c6014d7d49ad2e205',1,'floppy_struct']]],
+  ['rd_5flength_2474',['rd_length',['../flash_2Linux-0_811_2kernel_2blk__drv_2ramdisk_8c.html#a5cdea0333bab8821986aea396b19f293',1,'rd_length():&#160;ramdisk.c'],['../src_2kernel_2blk__drv_2ramdisk_8c.html#a5cdea0333bab8821986aea396b19f293',1,'rd_length():&#160;ramdisk.c']]],
+  ['rd_5fstart_2475',['rd_start',['../src_2kernel_2blk__drv_2ramdisk_8c.html#ab4e300a3ffa8cf1beb1b609bf8fb1dca',1,'rd_start():&#160;ramdisk.c'],['../flash_2Linux-0_811_2kernel_2blk__drv_2ramdisk_8c.html#ab4e300a3ffa8cf1beb1b609bf8fb1dca',1,'rd_start():&#160;ramdisk.c']]],
+  ['read_5fq_2476',['read_q',['../structtty__struct.html#a0ea7ee6f76d0148c90beca212b9f7e21',1,'tty_struct']]],
+  ['recalibrate_2477',['recalibrate',['../flash_2Linux-0_811_2kernel_2blk__drv_2floppy_8c.html#ac772223cda241dc9c63b020a2825043b',1,'recalibrate():&#160;floppy.c'],['../src_2kernel_2blk__drv_2hd_8c.html#ac772223cda241dc9c63b020a2825043b',1,'recalibrate():&#160;hd.c'],['../src_2kernel_2blk__drv_2floppy_8c.html#ac772223cda241dc9c63b020a2825043b',1,'recalibrate():&#160;floppy.c'],['../flash_2Linux-0_811_2kernel_2blk__drv_2hd_8c.html#ac772223cda241dc9c63b020a2825043b',1,'recalibrate():&#160;hd.c']]],
+  ['refcnt_2478',['refcnt',['../structbucket__desc.html#ab9517ca9b3fc8ee4867324ef0465cff4',1,'bucket_desc']]],
+  ['release_2479',['release',['../structutsname.html#a2d7498fa7348a5371ea77d86c7fb947c',1,'utsname']]],
+  ['rem_2480',['rem',['../structldiv__t.html#a0f217ff62b8640aa945ec84d6d0bd000',1,'ldiv_t::rem()'],['../structdiv__t.html#ac64389de252de53eda8b4f8dbb7c623f',1,'div_t::rem()']]],
+  ['reply_5fbuffer_2481',['reply_buffer',['../flash_2Linux-0_811_2kernel_2blk__drv_2floppy_8c.html#a3b450721805427b434613539f472715b',1,'reply_buffer():&#160;floppy.c'],['../src_2kernel_2blk__drv_2floppy_8c.html#a3b450721805427b434613539f472715b',1,'reply_buffer():&#160;floppy.c']]],
+  ['request_2482',['request',['../src_2kernel_2blk__drv_2ll__rw__blk_8c.html#a4ff03211f3b3c9294ae541cbd6686832',1,'request():&#160;ll_rw_blk.c'],['../flash_2Linux-0_811_2kernel_2blk__drv_2blk_8h.html#a4ff03211f3b3c9294ae541cbd6686832',1,'request():&#160;ll_rw_blk.c'],['../flash_2Linux-0_811_2kernel_2blk__drv_2ll__rw__blk_8c.html#a4ff03211f3b3c9294ae541cbd6686832',1,'request():&#160;ll_rw_blk.c'],['../src_2kernel_2blk__drv_2blk_8h.html#a4ff03211f3b3c9294ae541cbd6686832',1,'request():&#160;ll_rw_blk.c']]],
+  ['request_5ffn_2483',['request_fn',['../structblk__dev__struct.html#a376571451a1e7a8aa3cf4bd784cd42c1',1,'blk_dev_struct']]],
+  ['reset_2484',['reset',['../flash_2Linux-0_811_2kernel_2blk__drv_2floppy_8c.html#adb7a760512715e86f925f8a8d4a15ba8',1,'reset():&#160;floppy.c'],['../flash_2Linux-0_811_2kernel_2blk__drv_2hd_8c.html#adb7a760512715e86f925f8a8d4a15ba8',1,'reset():&#160;hd.c'],['../src_2kernel_2blk__drv_2floppy_8c.html#adb7a760512715e86f925f8a8d4a15ba8',1,'reset():&#160;floppy.c'],['../src_2kernel_2blk__drv_2hd_8c.html#adb7a760512715e86f925f8a8d4a15ba8',1,'reset():&#160;hd.c']]],
+  ['root_2485',['root',['../structtask__struct.html#a7e465a232e068e5bf74d8b389b8e82ed',1,'task_struct']]],
+  ['root_5fdev_2486',['ROOT_DEV',['../flash_2Linux-0_811_2fs_2super_8c.html#adc981cc78759e83089d9809fd54d2d52',1,'ROOT_DEV():&#160;super.c'],['../flash_2Linux-0_811_2include_2linux_2fs_8h.html#adc981cc78759e83089d9809fd54d2d52',1,'ROOT_DEV():&#160;super.c'],['../src_2fs_2super_8c.html#adc981cc78759e83089d9809fd54d2d52',1,'ROOT_DEV():&#160;super.c'],['../src_2include_2linux_2fs_8h.html#adc981cc78759e83089d9809fd54d2d52',1,'ROOT_DEV():&#160;super.c']]]
+];

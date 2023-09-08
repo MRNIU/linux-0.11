@@ -1,0 +1,9 @@
+var searchData=
+[
+  ['_5fbmap_1786',['_bmap',['../flash_2Linux-0_811_2fs_2inode_8c.html#ad19b3562cfd0ced5718591d63d158b26',1,'_bmap(struct m_inode *inode, int block, int create):&#160;inode.c'],['../src_2fs_2inode_8c.html#ad19b3562cfd0ced5718591d63d158b26',1,'_bmap(struct m_inode *inode, int block, int create):&#160;inode.c']]],
+  ['_5fexit_1787',['_exit',['../flash_2Linux-0_811_2include_2unistd_8h.html#a86f37095532694250eeae79115aebda0',1,'_exit(int status):&#160;_exit.c'],['../flash_2Linux-0_811_2lib_2__exit_8c.html#a9a96f0e64d9cacda269b41d7c0230bad',1,'_exit(int exit_code):&#160;_exit.c'],['../src_2include_2unistd_8h.html#abc96bd69b58b2deaddb484478d911c1b',1,'_exit(int status):&#160;_exit.c'],['../src_2lib_2__exit_8c.html#a9a96f0e64d9cacda269b41d7c0230bad',1,'_exit(int exit_code):&#160;_exit.c']]],
+  ['_5fget_5fbase_1788',['_get_base',['../flash_2Linux-0_811_2include_2linux_2sched_8h.html#abc94552768d52021da94d543ddb8503d',1,'_get_base(char *addr):&#160;sched.h'],['../src_2include_2linux_2sched_8h.html#abc94552768d52021da94d543ddb8503d',1,'_get_base(char *addr):&#160;sched.h']]],
+  ['_5fsyscall0_1789',['_syscall0',['../flash_2Linux-0_811_2init_2main_8c.html#ad75feee731df1149d3b2c180a3bff5ff',1,'_syscall0(static inline _syscall0(int, fork):&#160;main.c'],['../src_2init_2main_8c.html#ad75feee731df1149d3b2c180a3bff5ff',1,'_syscall0(static inline _syscall0(int, fork):&#160;main.c']]],
+  ['_5fsyscall3_1790',['_syscall3',['../flash_2Linux-0_811_2lib_2wait_8c.html#afcd28b5d8c5a2e15b65be410ad7c4407',1,'_syscall3(pid_t, waitpid, pid_t, pid, int *, wait_stat, int, options):&#160;wait.c'],['../src_2lib_2wait_8c.html#afcd28b5d8c5a2e15b65be410ad7c4407',1,'_syscall3(pid_t, waitpid, pid_t, pid, int *, wait_stat, int, options):&#160;wait.c']]],
+  ['_5ftmain_1791',['_tmain',['../Trans_8cpp.html#a1be3ada543282f099f3041460d0bf93a',1,'Trans.cpp']]]
+];

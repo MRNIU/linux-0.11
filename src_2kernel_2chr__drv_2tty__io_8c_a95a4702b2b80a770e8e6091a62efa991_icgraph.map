@@ -1,0 +1,9 @@
+<map id="sleep_if_empty" name="sleep_if_empty">
+<area shape="rect" id="node1" title=" " alt="" coords="473,31,596,57"/>
+<area shape="rect" id="node2" href="$src_2kernel_2chr__drv_2tty__io_8c.html#ab77d5879b0cab7966a575104595b9aee" title=" " alt="" coords="317,5,393,32"/>
+<area shape="rect" id="node5" href="$src_2kernel_2chr__drv_2tty__io_8c.html#a458d21c73fc4113236898d9afa004ed4" title=" " alt="" coords="285,56,425,83"/>
+<area shape="rect" id="node3" href="$flash_2Linux-0_811_2fs_2char__dev_8c.html#a60e4722bc43d19889565a39c2f058e1d" title=" " alt="" coords="153,5,224,32"/>
+<area shape="rect" id="node4" href="$flash_2Linux-0_811_2fs_2char__dev_8c.html#ac606195a8d4461b6b12fdd87f935339a" title=" " alt="" coords="17,5,80,32"/>
+<area shape="rect" id="node6" href="$flash_2Linux-0_811_2fs_2super_8c.html#a516f58ff075ed9e15bb77645c5d55b56" title=" " alt="" coords="140,56,237,83"/>
+<area shape="rect" id="node7" href="$flash_2Linux-0_811_2kernel_2blk__drv_2hd_8c.html#a1e990fd03a090a3504d84824343bc54a" title=" " alt="" coords="5,56,92,83"/>
+</map>

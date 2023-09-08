@@ -1,0 +1,28 @@
+var src_2kernel_2sys_8c =
+[
+    [ "sys_acct", "src_2kernel_2sys_8c.html#a385ab4cfc506f39094f5abda6bac6ac2", null ],
+    [ "sys_break", "src_2kernel_2sys_8c.html#a631b9d09f0ffe761b745f590018431c4", null ],
+    [ "sys_brk", "src_2kernel_2sys_8c.html#aee6f54c88e3d091ea8e497b89b605352", null ],
+    [ "sys_ftime", "src_2kernel_2sys_8c.html#a25940312909e6c6e681be1c7bf8de6d7", null ],
+    [ "sys_getpgrp", "src_2kernel_2sys_8c.html#a4189d21a994422eca3796f334f66267a", null ],
+    [ "sys_gtty", "src_2kernel_2sys_8c.html#a9d8cfad627dd423f56419b2c9ca31afc", null ],
+    [ "sys_lock", "src_2kernel_2sys_8c.html#ac04e2bc78eab91707adf52c448d7bc8c", null ],
+    [ "sys_mpx", "src_2kernel_2sys_8c.html#a4e9d4f3dcb0bda66bffe003266ae4054", null ],
+    [ "sys_phys", "src_2kernel_2sys_8c.html#a9148005341b0e500dcf4743052b7b53f", null ],
+    [ "sys_prof", "src_2kernel_2sys_8c.html#a569b75d2ccb09f3e0946c9fa4d277ecf", null ],
+    [ "sys_ptrace", "src_2kernel_2sys_8c.html#a8fbe84cd65d8adadd07025dab9228a33", null ],
+    [ "sys_rename", "src_2kernel_2sys_8c.html#a273ddc8c0a343b8acdb07b6baf2f1ba0", null ],
+    [ "sys_setgid", "src_2kernel_2sys_8c.html#a6a0c75ce8cbd1da51d2a54d885179fed", null ],
+    [ "sys_setpgid", "src_2kernel_2sys_8c.html#a6acc0f7359ced126db5e09a05e247ee3", null ],
+    [ "sys_setregid", "src_2kernel_2sys_8c.html#a7209d822ee98a7c3f401bc251a024cef", null ],
+    [ "sys_setreuid", "src_2kernel_2sys_8c.html#a014ad477afa88c61b1d8f7d5b28dbbfa", null ],
+    [ "sys_setsid", "src_2kernel_2sys_8c.html#a3e719e73e2229ff0ac3d99076fd90e14", null ],
+    [ "sys_setuid", "src_2kernel_2sys_8c.html#a32fe2645712ee7b824e0ea6769acdabc", null ],
+    [ "sys_stime", "src_2kernel_2sys_8c.html#a13a8f8c2ea37447a34a48d364febc6d5", null ],
+    [ "sys_stty", "src_2kernel_2sys_8c.html#ab8d8caae85eecda19c2d5cc41d67af1e", null ],
+    [ "sys_time", "src_2kernel_2sys_8c.html#a944189ed10ed5a3ba57f0fbd09f5e79b", null ],
+    [ "sys_times", "src_2kernel_2sys_8c.html#ab12535d66aaba5404b7101d381a43b36", null ],
+    [ "sys_ulimit", "src_2kernel_2sys_8c.html#a6786a8a0e32c8ee3902cbdeae577b936", null ],
+    [ "sys_umask", "src_2kernel_2sys_8c.html#af19ccd31053bd0b00fab930af41f86f8", null ],
+    [ "sys_uname", "src_2kernel_2sys_8c.html#a45548e3c78799983a4fd25f7d50094c3", null ]
+];
