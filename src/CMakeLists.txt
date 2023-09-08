@@ -24,7 +24,7 @@ add_library(blk_drv STATIC
 set(CHR_DRV_SRC  
         kernel/chr_drv/tty_io.c
         kernel/chr_drv/console.c
-        kernel/chr_drv/keyboard.s 
+        kernel/chr_drv/keyboard.S
         kernel/chr_drv/serial.c
         kernel/chr_drv/rs_io.s
         kernel/chr_drv/tty_ioctl.c
