@@ -40,12 +40,12 @@ if (APPLE)
 elseif (UNIX)
     message(STATUS "Now is UNIX-like OS's.")
     # GCC
-    find_program(Compiler_gcc g++)
+    find_program(Compiler_gcc gcc)
     if (NOT Compiler_gcc)
-        message(FATAL_ERROR "g++ not found.\n"
+        message(FATAL_ERROR "gcc not found.\n"
                 "Run `sudo apt-get install -y gcc g++` to install.")
     else ()
-        message(STATUS "Found g++ ${Compiler_gcc}")
+        message(STATUS "Found gcc ${Compiler_gcc}")
     endif ()
 
     # qemu

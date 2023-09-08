@@ -25,13 +25,13 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install --fix-missing -y doxygen graphviz clang-format clang-tidy cppcheck qemu-system lcov
-          sudo apt install --fix-missing -y gcc g++ gcc-riscv64-linux-gnu g++-riscv64-linux-gnu gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          sudo apt install --fix-missing -y doxygen graphviz clang-format clang-tidy cppcheck qemu-system
+          sudo apt install --fix-missing -y gcc g++
 
       - name: Build
         run: |
-          cmake --preset=build_x86_64 
-          cmake --build build_x86_64 --target doc
+          cmake --preset=build
+          cmake --build build --target doc
 
       - name: Publish
         uses: peaceiris/actions-gh-pages@v3
@@ -47,28 +47,22 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt update
-          sudo apt install --fix-missing -y doxygen graphviz clang-format clang-tidy cppcheck qemu-system lcov
-          sudo apt install --fix-missing -y gcc g++ gcc-riscv64-linux-gnu g++-riscv64-linux-gnu gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          sudo apt install --fix-missing -y doxygen graphviz clang-format clang-tidy cppcheck qemu-system
+          sudo apt install --fix-missing -y gcc g++
 
-      - name: x86_64
+      - name: build
         run: |
-          cmake --preset=build_x86_64 
+          cmake --preset=build 
           # @todo ci 暂时跑不过
-          #          cmake --build build_x86_64 --target boot
-          #          cmake --build build_x86_64 --target kernel
-          cmake --build build_x86_64 --target coverage
+          #          cmake --build build --target boot
+          #          cmake --build build --target kernel
+          cmake --build build --target coverage
 
       - name: riscv64
         run: |
           cmake --preset=build_riscv64
           # @todo ci 暂时跑不过
       #          cmake --build build_riscv64 --target kernel
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v3
-        with:
-          files: build_x86_64/coverage/coverage.info
-          verbose: true
 
 #  build_osx:
 #    runs-on: macos-latest
