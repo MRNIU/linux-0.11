@@ -11,6 +11,14 @@ project(
 
 add_compile_options(${COMMON_COMPILE_OPTIONS})
 
+add_library(head STATIC
+        ${PROJECT_SOURCE_DIR}/boot/head.s
+)
+
+add_library(math STATIC
+        kernel/math/math_emulate.c
+)
+
 set(BLK_DRV_SRC
         kernel/blk_drv/ll_rw_blk.c
         kernel/blk_drv/floppy.c
@@ -100,4 +108,27 @@ add_library(lib STATIC
         ${LIB_SRC}
 )
 
+add_library(setup.bin STATIC
+        ${PROJECT_SOURCE_DIR}/boot/setup.s
+)
+
+add_library(bootsect.bin STATIC
+        ${PROJECT_SOURCE_DIR}/boot/bootsect.s
+)
+
+add_library(main STATIC
+        init/main.c
+)
+
 include_directories(${PROJECT_SOURCE_DIR}/include)
+
+# add_executable(system
+#         kernel mm fs
+#         blk_drv chr_drv
+#         math
+#         lib
+# )
+
+add_executable(build
+        tools/build.c
+)
