@@ -21,10 +21,10 @@ list(APPEND COMMON_COMPILE_OPTIONS
 
 # 通用链接选项
 list(APPEND COMMON_LINK_OPTIONS
-        -m i386pe
+        -m32
         -Ttext 0
         -e startup_32
         -s
         -M
-        --image-base 0x0000
+        # --image-base 0x0000
 )
