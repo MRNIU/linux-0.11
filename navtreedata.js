@@ -66,21 +66,21 @@ var NAVTREE =
 var NAVTREEINDEX =
 [
 "Trans_8cpp.html",
-"flash_2Linux-0_811_2include_2a_8out_8h.html#a630f74c0796d2a6b99b185a7b2d3b82f",
-"flash_2Linux-0_811_2include_2linux_2fs_8h.html#a608309a4a886522767be4646f5c709cc",
-"flash_2Linux-0_811_2include_2linux_2tty_8h.html#abec2eb3e46639063e70f77b9b31e9b7d",
-"flash_2Linux-0_811_2include_2termios_8h.html#a6f51a92d18937be41ace117366b5fc1e",
-"flash_2Linux-0_811_2kernel_2blk__drv_2floppy_8c.html#a1a91ebf4e417281fd2d56b4faf6df30a",
-"flash_2Linux-0_811_2kernel_2mktime_8c.html#a509a01c55cbe47386fe24602b7c7fda1",
-"functions_t.html",
-"src_2fs_2ioctl_8c.html#a5cbe061d56a2680ec79a99bc1e62a448",
-"src_2include_2fcntl_8h.html#a9f5acfe79fafe14b6694447bd0e9f10b",
-"src_2include_2linux_2sys_8h.html#a121cddd4818b3b02acd83a208c6f2e53",
-"src_2include_2sys_2utsname_8h_source.html",
-"src_2include_2unistd_8h.html#a7a7528627126876c1b25c4ba99c45600",
-"src_2kernel_2chr__drv_2console_8c.html#af5d687c3605446645a4f1a457cb72f9b",
-"src_2lib_2__exit_8c_source.html",
-"structstat.html#ac5b90090ae323741ae4c9e4f3683a29f"
+"flash_2Linux-0_811_2include_2a_8out_8h.html#aa4184a6edef013fc8aa386f65514bfa5",
+"flash_2Linux-0_811_2include_2linux_2fs_8h.html#aa5809896ce36f9b7ddab0b41745cb0bc",
+"flash_2Linux-0_811_2include_2signal_8h.html#a08ba0dd26a850108a1746412faba2b21",
+"flash_2Linux-0_811_2include_2termios_8h.html#a7f8ae5839a52e46c4d004ccda5184f43",
+"flash_2Linux-0_811_2kernel_2blk__drv_2floppy_8c.html#a4c0237fdbba78af703ee275cc492a8b1",
+"flash_2Linux-0_811_2kernel_2printk_8c.html#ac75fce8692fd1d41a8985f6aacc4a175",
+"functions_s.html",
+"src_2fs_2ioctl_8c.html#a46afb91d55184bb8148018e882af93fa",
+"src_2include_2fcntl_8h.html#a7e7a00c884ea124bb9f687b16cb5db9b",
+"src_2include_2linux_2sys_8h.html#a0c88700c19ae1a3c4b30127b475324fc",
+"src_2include_2sys_2utsname_8h.html#a8c36db733b9582d925f019949d39b515",
+"src_2include_2unistd_8h.html#a6e39c79493a70254a5830420fce8b00b",
+"src_2kernel_2chr__drv_2console_8c.html#af5743cc633a50a368f51b5a19d4cafe6",
+"src_2lib_2__exit_8c.html#ae49c98e4b7a5afee70d24d144b71afb8",
+"structsigaction.html#a59e4a1b183425f92f2a102a6ce7691b2"
 ];
 
 var SYNCONMSG = 'click to disable panel synchronisation';

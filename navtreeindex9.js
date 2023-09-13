@@ -1,5 +1,6 @@
 var NAVTREEINDEX9 =
 {
+"src_2include_2fcntl_8h.html#a7e7a00c884ea124bb9f687b16cb5db9b":[3,0,1,1,7,12],
 "src_2include_2fcntl_8h.html#a9f5acfe79fafe14b6694447bd0e9f10b":[3,0,1,1,7,16],
 "src_2include_2fcntl_8h.html#aabb866cd0cf7ed3544dfc335e0e360fd":[3,0,1,1,7,9],
 "src_2include_2fcntl_8h.html#ab93a8621587aba90181efd7d3aeea67e":[3,0,1,1,7,1],
@@ -248,6 +249,5 @@ var NAVTREEINDEX9 =
 "src_2include_2linux_2sys_8h.html#a01fbd4b45143dd51bf6f338d8ee325da":[3,0,1,1,1,8,16],
 "src_2include_2linux_2sys_8h.html#a0269ae44b3dfc6ad5279139367291826":[3,0,1,1,1,8,65],
 "src_2include_2linux_2sys_8h.html#a08fb84cb2f199617ce7d96f1de363ce9":[3,0,1,1,1,8,34],
-"src_2include_2linux_2sys_8h.html#a0a1f47764ce3f7737f03599a1e9f33eb":[3,0,1,1,1,8,64],
-"src_2include_2linux_2sys_8h.html#a0c88700c19ae1a3c4b30127b475324fc":[3,0,1,1,1,8,25]
+"src_2include_2linux_2sys_8h.html#a0a1f47764ce3f7737f03599a1e9f33eb":[3,0,1,1,1,8,64]
 };

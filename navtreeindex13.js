@@ -1,5 +1,6 @@
 var NAVTREEINDEX13 =
 {
+"src_2kernel_2chr__drv_2console_8c.html#af5743cc633a50a368f51b5a19d4cafe6":[3,0,1,3,1,0,52],
 "src_2kernel_2chr__drv_2console_8c.html#af5d687c3605446645a4f1a457cb72f9b":[3,0,1,3,1,0,48],
 "src_2kernel_2chr__drv_2console_8c.html#af7504fc0e249186b115eb5f51a297878":[3,0,1,3,1,0,54],
 "src_2kernel_2chr__drv_2console_8c.html#af76e6033b7a37ace45dd2d6859c6069d":[3,0,1,3,1,0,64],
@@ -248,6 +249,5 @@ var NAVTREEINDEX13 =
 "src_2kernel_2vsprintf_8c.html#ac2f4c669c6f6aa6caa5ab8adb1b07dd0":[3,0,1,3,12,9],
 "src_2kernel_2vsprintf_8c_source.html":[3,0,1,3,12],
 "src_2lib_2__exit_8c.html":[3,0,1,4,0],
-"src_2lib_2__exit_8c.html#a9a96f0e64d9cacda269b41d7c0230bad":[3,0,1,4,0,1],
-"src_2lib_2__exit_8c.html#ae49c98e4b7a5afee70d24d144b71afb8":[3,0,1,4,0,0]
+"src_2lib_2__exit_8c.html#a9a96f0e64d9cacda269b41d7c0230bad":[3,0,1,4,0,1]
 };
