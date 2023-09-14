@@ -14,6 +14,9 @@ enable_language(C ASM)
 add_library(head OBJECT
         head.s
 )
+target_compile_options(head PRIVATE 
+        -m32
+)
 
 add_library(setup.bin OBJECT
         setup.s
