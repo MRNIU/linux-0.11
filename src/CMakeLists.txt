@@ -24,13 +24,15 @@ add_executable(system
         lib
 )
 
-# target_compile_options(system PRIVATE 
-#         ${COMMON_COMPILE_OPTIONS}
-# )
+target_compile_options(system PRIVATE 
+        # ${COMMON_COMPILE_OPTIONS}
+        # -freestanding
+)
 
-# target_link_libraries(system PRIVATE
-#         ${COMMON_LINK_OPTIONS}
-# )
+target_link_libraries(system PRIVATE
+        # ${COMMON_LINK_OPTIONS}
+        -ffreestanding
+)
 
 set_target_properties(system PROPERTIES LINKER_LANGUAGE C)
 

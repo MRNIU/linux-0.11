@@ -37,6 +37,14 @@
         "CMAKE_EXPORT_COMPILE_COMMANDS": {
           "type": "BOOL",
           "value": "ON"
+        },
+        "CMAKE_CXX_LINK_FLAGS" :{
+          "type": "STRING",
+          "value": ""
+        },
+        "HAVE_FLAG_SEARCH_PATHS_FIRST": {
+          "type": "BOOL",
+                  "value": "FALSE"
         }
       }
     },
